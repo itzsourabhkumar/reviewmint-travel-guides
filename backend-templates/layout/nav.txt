@@ -1,0 +1,47 @@
+{# ============================================================
+   layout/nav.txt
+   ----------------------------------------------------------
+   Top navigation bar. Renders identically on every page.
+   The "active" class is added to the link matching the
+   current page (passed as `current_view`).
+
+   CONTEXT EXPECTED
+     current_view  string — one of: 'home' | 'destinations' |
+                   'personas' | 'about' | 'search' | 'info'
+                   (used to highlight the active nav link).
+
+   URLS REFERENCED
+     /                  home
+     /destinations/     destinations list
+     /personas/         persona guides
+     /about/            about page
+     (login button is handled client-side by app.js)
+============================================================ #}
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand" aria-label="ReviewMint home">
+      <span class="brand-mark">RM</span>
+      <span class="brand-word">Review<span class="brand-accent">Mint</span></span>
+    </a>
+
+    <div class="nav-links" id="navLinks">
+      <a href="/destinations/"
+         class="nav-link {% if current_view == 'destinations' %}active{% endif %}">
+        Destinations
+      </a>
+      <a href="/personas/"
+         class="nav-link {% if current_view == 'personas' %}active{% endif %}">
+        Persona Guides
+      </a>
+      <a href="/about/"
+         class="nav-link {% if current_view == 'about' %}active{% endif %}">
+        About
+      </a>
+      <button class="btn-login" data-action="open-login">LOGIN</button>
+    </div>
+
+    <button class="nav-search-mobile" data-action="focus-hero-search" aria-label="Search">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
+  </div>
+</nav>

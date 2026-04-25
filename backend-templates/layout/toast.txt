@@ -1,0 +1,28 @@
+{# ============================================================
+   layout/toast.txt
+   ----------------------------------------------------------
+   Mount point for transient toast notifications. Place this
+   somewhere in the body (typically just before the closing
+   </body>).
+
+   Toast HTML is INJECTED by app.js (showToast(message)) and
+   auto-dismisses after 2.8 seconds.
+
+   To trigger a toast on initial page load (e.g., flash messages
+   from your backend), inject a small inline script that calls
+   showToast(...). For example, in Django:
+
+       {% if messages %}
+         <script>
+           document.addEventListener('DOMContentLoaded', function() {
+             {% for message in messages %}
+               showToast({{ message.message|escapejs }});
+             {% endfor %}
+           });
+         </script>
+       {% endif %}
+
+   CONTEXT EXPECTED
+     none
+============================================================ #}
+<div id="toastRoot" aria-live="polite"></div>

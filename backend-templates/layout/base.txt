@@ -1,0 +1,46 @@
+{# ============================================================
+   layout/base.txt
+   ----------------------------------------------------------
+   The recommended base skeleton. Every page extends this and
+   fills in {% block content %}. If you do this, individual
+   page templates only need to wrap their content in a block —
+   they don't repeat head/nav/footer.
+
+   USAGE (Django):
+     {% extends "layout/base.txt" %}
+     {% block content %}
+        <!-- your page goes here -->
+     {% endblock %}
+
+   USAGE (Jinja2):
+     {% extends "layout/base.txt" %}
+     {% block content %}
+        ...
+     {% endblock %}
+
+   CONTEXT EXPECTED
+     page_title    (optional)  used in <title>
+     current_view  (optional)  highlights the active nav link
+     current_year  (optional)  shown in footer copyright
+============================================================ #}
+<!doctype html>
+<html lang="en">
+{% include "layout/head.txt" %}
+<body>
+  {% include "layout/nav.txt" %}
+
+  <main id="main" class="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include "layout/footer.txt" %}
+
+  {% include "layout/login-modal.txt" %}
+  {% include "layout/toast.txt" %}
+
+  {# Adjust path to wherever your backend serves static assets. #}
+  <script src="/static/app.js" defer></script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

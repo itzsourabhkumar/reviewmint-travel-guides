@@ -1,0 +1,49 @@
+{# ============================================================
+   pages/info.txt   —   Route: GET /info/<topic>/
+   ----------------------------------------------------------
+   Generic informational page. Used for:
+     /info/how-it-works/      How It Works
+     /info/mint-scoring/      The Mint Scoring System
+     /info/careers/           Careers
+     /info/travel-tribes/     Travel Tribes
+     /info/ambassadors/       Ambassador Program
+     /info/support/           Support
+     /info/privacy/           Privacy Policy
+     /info/terms/             Terms of Service
+     /info/cookies/           Cookie Policy
+
+   See data/info-content.txt for the full content of every topic.
+
+   CONTEXT EXPECTED
+     topic        InfoContent object with:
+                  - title    string
+                  - intro    string (subtitle / lede)
+                  - sections list of {heading, body}
+
+   INCLUDES
+     components/page-header.txt
+     components/info-section.txt   (rendered once per section)
+============================================================ #}
+{% extends "layout/base.txt" %}
+
+{% block content %}
+<div class="fade-in">
+
+  {% include "components/page-header.txt" with eyebrow="Documentation" title=topic.title subtitle=topic.intro %}
+
+  <section style="padding-bottom: 5rem;">
+    <div class="info-sections">
+      {% for s in topic.sections %}
+        {% include "components/info-section.txt" with section=s %}
+      {% endfor %}
+    </div>
+
+    <div class="info-back">
+      <a href="/" class="btn-dark">
+        Back to Home
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </a>
+    </div>
+  </section>
+</div>
+{% endblock %}

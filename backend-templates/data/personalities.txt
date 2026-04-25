@@ -1,0 +1,20 @@
+============================================================
+data/personalities.txt
+------------------------------------------------------------
+Canonical list of personality tags used to filter destinations
+and itinerary items. Format: JSON array of {id, icon}.
+
+The `icon` field names the lucide-style icon to render in the
+template (see data/icons.txt for the actual SVG strings).
+============================================================
+
+[
+  { "id": "All",             "icon": "trending" },
+  { "id": "Introvert",       "icon": "wind" },
+  { "id": "Extrovert",       "icon": "users" },
+  { "id": "History Lover",   "icon": "history" },
+  { "id": "Adventure Lover", "icon": "mountain" },
+  { "id": "Spiritual",       "icon": "smile" },
+  { "id": "Young",           "icon": "smile" },
+  { "id": "Old",             "icon": "history" }
+]

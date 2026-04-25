@@ -1,0 +1,58 @@
+{# ============================================================
+   pages/about.txt   —   Route: GET /about/
+   ----------------------------------------------------------
+   The About page. Stats, design pillars, and a CTA back to
+   the destinations grid.
+
+   CONTEXT EXPECTED
+     stats         list of {label, value} pairs
+                   (typically: Verified Cities, Hours per Blueprint,
+                    Sponsored Posts, Editorial Reviewers)
+     pillars       list of {icon_svg, title, body}
+                   (typically 3 pillars — see notes below)
+
+   INCLUDES
+     components/page-header.txt
+
+   NOTES
+     The icon_svg field on each pillar should be a full <svg>
+     string. See data/icons.txt for the lucide-style icons used
+     in the original (compass, shield, sparkles).
+============================================================ #}
+{% extends "layout/base.txt" %}
+
+{% block content %}
+<div class="fade-in">
+
+  {% include "components/page-header.txt" with eyebrow="Our Story" title="About ReviewMint" subtitle="We exist because most travel blogs lie a little, every paid review lies a lot, and you only have one weekend." %}
+
+  <section class="container" style="max-width: 64rem; padding-bottom: 5rem;">
+
+    <div class="about-stats">
+      {% for s in stats %}
+        <div class="about-stat">
+          <div class="about-stat-value">{{ s.value }}</div>
+          <div class="about-stat-label">{{ s.label }}</div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="about-pillars">
+      {% for p in pillars %}
+        <div class="about-pillar">
+          <div class="about-pillar-icon">{{ p.icon_svg|safe }}</div>
+          <h3 class="about-pillar-title">{{ p.title }}</h3>
+          <p class="about-pillar-body">{{ p.body }}</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="about-cta">
+      <h2>Ready for a tighter trip?</h2>
+      <p>Browse our verified blueprints and pick a city you can do justice to in 24 hours.</p>
+      <a href="/destinations/" class="btn-brand">Explore Destinations</a>
+    </div>
+
+  </section>
+</div>
+{% endblock %}

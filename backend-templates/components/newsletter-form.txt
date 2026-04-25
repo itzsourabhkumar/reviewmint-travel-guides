@@ -1,0 +1,24 @@
+{# ============================================================
+   components/newsletter-form.txt
+   ----------------------------------------------------------
+   The footer newsletter signup. Posts to /api/newsletter/subscribe
+   by default — change the action URL below to match your backend
+   endpoint.
+
+   CONTEXT EXPECTED
+     none
+
+   BACKEND ENDPOINT TO IMPLEMENT
+     POST /api/newsletter/subscribe
+       body: email=<address>
+       success: 200 — returns toast text or redirect
+       failure: 400 — invalid email
+============================================================ #}
+<form class="newsletter" id="newsletterForm" action="/api/newsletter/subscribe" method="post" autocomplete="off">
+  {# Insert your CSRF token here if your framework requires it. #}
+  {# Django:  {% csrf_token %} #}
+  {# Rails:   <%= csrf_meta_tags %> at the top of <head> instead #}
+
+  <input type="email" name="email" id="newsletterEmail" placeholder="Email" class="newsletter-input" required>
+  <button type="submit" class="newsletter-btn">Join</button>
+</form>

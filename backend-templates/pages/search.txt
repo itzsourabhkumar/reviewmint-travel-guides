@@ -1,0 +1,58 @@
+{# ============================================================
+   pages/search.txt   —   Route: GET /search/?q=<query>
+   ----------------------------------------------------------
+   Search results page. Backend filters destinations by name /
+   tagline / id (case-insensitive substring match against `query`)
+   and renders the matches in a grid.
+
+   The `searchRefine` input on this page submits back to the
+   same endpoint via GET — so refining the query is just another
+   page load with a new ?q=
+
+   CONTEXT EXPECTED
+     query         string — the user's search string (may be empty)
+     results       list of DestinationSummary that matched
+
+   INCLUDES
+     components/page-header.txt
+     components/city-card.txt
+============================================================ #}
+{% extends "layout/base.txt" %}
+
+{% block content %}
+<div class="fade-in">
+
+  {% if query %}
+    {% include "components/page-header.txt" with eyebrow="Search Results" title='"'|add:query|add:'"' subtitle=results|length|stringformat:"%s blueprint(s) found." %}
+  {% else %}
+    {% include "components/page-header.txt" with eyebrow="Search Results" title="Browse All Cities" subtitle=results|length|stringformat:"%s blueprint(s) found." %}
+  {% endif %}
+
+  <section class="container" style="padding-bottom: 5rem;">
+
+    <form class="search-refine-wrap" action="/search/" method="get" role="search">
+      <span class="search-refine-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </span>
+      <input id="searchRefine" name="q" class="search-refine" type="text"
+             placeholder="Refine your search…" value="{{ query }}" autofocus>
+    </form>
+
+    {% if results %}
+      <div class="city-grid">
+        {% for city in results %}
+          {% include "components/city-card.txt" with city=city %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p style="margin: 0 0 1rem;">No matches for "{{ query }}"</p>
+        <p style="font-size: 0.75rem; color: var(--slate-500); text-transform: none; letter-spacing: 0;">
+          Try a city name like "Agra" or a vibe like "spiritual".
+        </p>
+      </div>
+    {% endif %}
+
+  </section>
+</div>
+{% endblock %}

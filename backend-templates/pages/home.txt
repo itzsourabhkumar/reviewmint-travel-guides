@@ -1,0 +1,56 @@
+{# ============================================================
+   pages/home.txt   —   Route: GET /
+   ----------------------------------------------------------
+   The home page. Hero section, personality filter strip, and a
+   responsive grid of city blueprint cards.
+
+   CONTEXT EXPECTED
+     destinations         list of DestinationSummary
+                          (id, name, tagline, image, rating)
+     active_personality   string ('All' or one of the persona ids)
+     personalities        list of {id, icon} (see data/personalities.txt)
+
+   INCLUDES
+     components/persona-strip.txt
+     components/city-card.txt        (rendered once per destination)
+
+   NOTES
+     The hero search input submits to GET /search/?q=...
+============================================================ #}
+{% extends "layout/base.txt" %}
+
+{% block content %}
+<section class="hero fade-in">
+  <div class="hero-bg">
+    <img src="https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=2076&auto=format&fit=crop" alt="">
+  </div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Verified One-Day Blueprints</div>
+    <h1 class="hero-title">
+      EFFORTLESS <span class="accent">TRAVEL.</span><br>
+      MAXIMAL <span class="italic">JOY.</span>
+    </h1>
+    <form class="hero-search-wrap" action="/search/" method="get" role="search">
+      <input id="heroSearch" name="q" class="hero-search" type="text"
+             placeholder="Where are you heading?" autocomplete="off">
+      <button type="submit" class="hero-search-icon" aria-label="Submit search">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+    </form>
+  </div>
+</section>
+
+<section class="persona-strip-wrap">
+  {% include "components/persona-strip.txt" with active=active_personality label="Personality" %}
+
+  {% if destinations %}
+    <div class="city-grid">
+      {% for city in destinations %}
+        {% include "components/city-card.txt" with city=city %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">No destinations match this personality yet.</div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,44 @@
+{# ============================================================
+   components/timeline-step.txt
+   ----------------------------------------------------------
+   One step in the 24-hour itinerary timeline. If the active
+   personality doesn't match this step's personalities, the
+   step is rendered with a `dim` class (visually de-emphasized).
+
+   CONTEXT EXPECTED
+     item                 ItineraryItem with:
+                            time          string ("06:00 AM")
+                            place         string
+                            duration      string
+                            description   string
+                            personalities list of string
+     active_personality   string — current filter ('All' or
+                          one of the persona ids)
+
+   COMPUTED IN VIEW (recommended)
+     match  bool — True if active_personality == 'All'
+                   OR active_personality is in item.personalities
+
+     If your engine can compute this inline, you can skip the
+     pre-compute and use the inline check shown below.
+============================================================ #}
+{% with match=item.matches_persona %}
+<div class="timeline-step {% if not match %}dim{% endif %}">
+  <span class="timeline-dot"></span>
+
+  <div class="timeline-meta">
+    <span class="time">{{ item.time }}</span>
+    <span class="divider"></span>
+    <span>{{ item.duration }}</span>
+  </div>
+
+  <h4 class="timeline-place">{{ item.place }}</h4>
+  <p class="timeline-desc">{{ item.description }}</p>
+
+  <div class="timeline-personas">
+    {% for p in item.personalities %}
+      <span class="persona-chip {% if match and p == active_personality %}match{% endif %}">{{ p }}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endwith %}

@@ -1,0 +1,42 @@
+{# ============================================================
+   components/reach-item.txt
+   ----------------------------------------------------------
+   One row in the "Getting There" panel of a city detail page.
+
+   CONTEXT EXPECTED
+     r       ReachOption with:
+               type    string — 'Flight' | 'Train' | 'Road' | 'Bus'
+               detail  string
+               time    (optional) string
+               hub     string
+               cost    string
+
+   The icon shown is chosen by `r.type`. Your view should pre-set
+   `r.icon_svg` to one of the four lucide-style SVGs from
+   data/icons.txt: train, bus, car (for 'Road'), or plane.
+
+   If your view doesn't pre-set icon_svg, the if/elif block below
+   chooses one inline (Django-friendly).
+============================================================ #}
+<div class="reach-item">
+  <div class="reach-icon">
+    {% if r.icon_svg %}
+      {{ r.icon_svg|safe }}
+    {% elif r.type == "Train" %}
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19V5h8v14"/><path d="M4 11h16"/><path d="M12 5v14"/><circle cx="8" cy="17" r="1"/><circle cx="16" cy="17" r="1"/><path d="m6 21 1-2"/><path d="m17 19 1 2"/></svg>
+    {% elif r.type == "Road" %}
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+    {% elif r.type == "Flight" %}
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+    {% else %}
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2l.64-2.54c.24-.96.24-1.96 0-2.92l-1.07-4.27A3 3 0 0 0 17.66 5H4a2 2 0 0 0-2 2v10h2"/><path d="M14 17H9"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/></svg>
+    {% endif %}
+  </div>
+  <div class="reach-body">
+    <div class="reach-row">
+      <h5 class="reach-detail">{{ r.detail }}</h5>
+      <span class="reach-cost">{{ r.cost }}</span>
+    </div>
+    <p class="reach-meta">{% if r.time %}{{ r.time }} • {% endif %}{{ r.hub }}</p>
+  </div>
+</div>

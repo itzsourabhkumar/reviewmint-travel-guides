@@ -1,0 +1,33 @@
+{# ============================================================
+   components/persona-strip.txt
+   ----------------------------------------------------------
+   Horizontal personality filter strip. Shown on the home page
+   (label="Personality") and the persona-guides page (label="Pick One").
+
+   Each button links to the same page with ?p=<id> so the
+   backend can re-render the filtered grid.
+
+   CONTEXT EXPECTED
+     active        string — currently selected persona id
+                   ('All' | 'Introvert' | 'Extrovert' | 'History Lover'
+                    | 'Adventure Lover' | 'Spiritual' | 'Young' | 'Old')
+     label         (optional) string — heading shown on desktop
+                   (defaults to 'Personality')
+     personalities list of {id, icon_svg}
+                   See data/personalities.txt for the canonical list.
+
+   The submit URL preserves the current page — so if you're on
+   /personas/, clicking persona buttons reloads /personas/?p=...
+============================================================ #}
+<div class="persona-strip">
+  <span class="persona-strip-label">{{ label|default:"Personality" }}</span>
+  <div class="persona-strip-buttons">
+    {% for p in personalities %}
+      <a href="?p={{ p.id|urlencode }}"
+         class="persona-btn {% if p.id == active %}active{% endif %}">
+        {{ p.icon_svg|safe }}
+        {{ p.id }}
+      </a>
+    {% endfor %}
+  </div>
+</div>

@@ -1,0 +1,94 @@
+============================================================
+data/info-content.txt
+------------------------------------------------------------
+Content for the generic /info/<topic>/ pages.
+Format: JSON object keyed by topic slug.
+
+Suggested DB schema:
+  Topic(slug, title, intro)
+  TopicSection(topic_fk, order, heading, body)
+============================================================
+
+{
+  "how-it-works": {
+    "title": "How It Works",
+    "intro": "Every ReviewMint blueprint is a 24-hour, locally-verified plan. No filler, only the facts.",
+    "sections": [
+      { "heading": "1. We pick a city", "body": "We choose destinations where a single day is genuinely enough to capture the soul of the place — not a watered-down sample." },
+      { "heading": "2. We build a 24-hour blueprint", "body": "Every itinerary is timed, sequenced, and stress-tested against traffic, queues, opening hours, and weather windows." },
+      { "heading": "3. We score the trip", "body": "Each blueprint receives a Mint Score that combines verified payoff, effort intensity, and crowd-honesty against a fixed rubric." }
+    ]
+  },
+  "mint-scoring": {
+    "title": "The Mint Scoring System",
+    "intro": "A single 0-100 number that tells you whether a destination is worth your day. Higher is better.",
+    "sections": [
+      { "heading": "Visual / Soul Payoff (50%)", "body": "How memorable is the experience? We weight architecture, culture, and atmosphere — not Instagram appeal alone." },
+      { "heading": "Effort Intensity (30%)", "body": "Combined fatigue and money cost relative to the duration. A great trip that destroys you is penalized." },
+      { "heading": "Crowd Honesty (20%)", "body": "How well does the destination handle peak traffic? Tourist traps lose points; underrated gems gain them." }
+    ]
+  },
+  "careers": {
+    "title": "Careers at ReviewMint",
+    "intro": "We hire generalists, walkers, photographers, and skeptics. We do not hire affiliate marketers.",
+    "sections": [
+      { "heading": "Field Reviewer", "body": "Spend 3-5 days in a city, walk every route on this site, and write a verdict no sponsor would let you write elsewhere." },
+      { "heading": "Frontend Engineer", "body": "React, TypeScript, Tailwind. Help us keep the experience tight, the load times under 1s, and the animations meaningful." },
+      { "heading": "Open applications", "body": "No matching role? Send a city you would review and a single page on what is wrong with the existing guides for it." }
+    ]
+  },
+  "travel-tribes": {
+    "title": "Travel Tribes",
+    "intro": "Find people who travel the way you do — same rhythm, same intensity, same definition of worth it.",
+    "sections": [
+      { "heading": "Slow & Spiritual", "body": "Riverside mornings, single-monastery days, journals. No 4-stop itineraries." },
+      { "heading": "Adrenaline & Altitude", "body": "Rafting, trekking, paragliding — for people whose Sundays involve helmets." },
+      { "heading": "History & Architecture", "body": "Forts, frescoes, footnotes. We will hand you a 1500-page reading list. You will love it." }
+    ]
+  },
+  "ambassadors": {
+    "title": "Ambassador Program",
+    "intro": "A small, paid network of city-specific writers who refuse paid placements.",
+    "sections": [
+      { "heading": "How we pay", "body": "Flat per-blueprint rate. We never share affiliate revenue with reviewers, because affiliate incentives corrupt judgment." },
+      { "heading": "How we vet", "body": "Six-month minimum residence in the city, three sample blueprints, and one interview with the editorial lead." },
+      { "heading": "How we publish", "body": "Every blueprint is reviewed by two other ambassadors before it goes live — disagreements are recorded in a public changelog." }
+    ]
+  },
+  "support": {
+    "title": "Support",
+    "intro": "Real humans. No tier-one bots. Replies in under 24 hours during business days.",
+    "sections": [
+      { "heading": "Trip-day issues", "body": "If something we recommended is closed, dangerous, or substantially worse than described, message us — we will make it right." },
+      { "heading": "Editorial corrections", "body": "Spot a factual error? Email corrections@reviewmint.example with the URL and the source — we publish a public changelog." },
+      { "heading": "Press & partnerships", "body": "We do not accept sponsored placements. We do answer press inquiries." }
+    ]
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "intro": "We collect only what we need to run the service. We never sell your data.",
+    "sections": [
+      { "heading": "What we collect", "body": "Email address (if you subscribe), aggregate page-view analytics with no personally identifiable data, and trip-history if you choose to save itineraries." },
+      { "heading": "What we share", "body": "Nothing with advertisers. Nothing with data brokers. Service providers (hosting, email) only when strictly required to operate." },
+      { "heading": "Your rights", "body": "You can export, edit, or delete every piece of data we hold about you from your account settings, with no questions asked." }
+    ]
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "intro": "The short version: use the site to plan trips, do not scrape it for ad copy, and do not blame us for the weather.",
+    "sections": [
+      { "heading": "Editorial use", "body": "You may quote up to 200 words of any blueprint with attribution. Anything more requires written permission." },
+      { "heading": "No warranty", "body": "Our blueprints are built carefully but the world changes. Verify hours, prices, and entry requirements before you travel." },
+      { "heading": "Changes", "body": "We may update these terms. If a change is material we will notify subscribers by email at least 30 days in advance." }
+    ]
+  },
+  "cookies": {
+    "title": "Cookie Policy",
+    "intro": "Three cookies. No tracking pixels. No third-party advertising tags.",
+    "sections": [
+      { "heading": "Session", "body": "A short-lived cookie that keeps you logged in while you are using the site. Expires when you close the browser." },
+      { "heading": "Preferences", "body": "Stores your last-used personality filter and dark-mode setting so the site remembers you between visits." },
+      { "heading": "Analytics", "body": "A single first-party analytics cookie counts page views in aggregate. No demographic profiling, no cross-site tracking." }
+    ]
+  }
+}
