@@ -1,0 +1,53 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  
+  --color-brand: #00B894; /* Vibrant Mint */
+  --color-brand-dark: #00816A;
+  --color-surface-dark: #0F172A; /* Deep Navy/Slate */
+  --color-surface-bg: #F8FAFC;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-surface-bg text-slate-900 leading-relaxed antialiased;
+  }
+}
+
+.glass {
+  @apply bg-white/10 backdrop-blur-md border border-white/10;
+}
+
+.glass-green {
+  @apply bg-emerald-500/5 backdrop-blur-sm border border-emerald-500/10 shadow-sm;
+}
+
+.glass-red {
+  @apply bg-rose-500/5 backdrop-blur-sm border border-rose-500/10 shadow-sm;
+}
+
+.itinerary-dot {
+  @apply w-2 h-2 rounded-full bg-brand shadow-[0_0_8px_rgba(0,184,148,0.6)];
+}
+
+.gauge-svg {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Home Page specific grid */
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
