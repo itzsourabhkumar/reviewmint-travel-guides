@@ -1,0 +1,34 @@
+{# ============================================================
+   components/city-card.txt
+   ----------------------------------------------------------
+   Reusable card showing one destination summary. Click takes
+   the user to the city detail page at /destinations/<id>/.
+
+   CONTEXT EXPECTED
+     city          DestinationSummary with:
+                     id       string slug
+                     name     string
+                     tagline  string
+                     image    string (URL)
+                     rating   string  (e.g. "8.4")
+============================================================ #}
+<a href="/destinations/{{ city.id }}/" class="city-card" role="link">
+  <div class="city-card-imgwrap">
+    <img src="{{ city.image }}" alt="{{ city.name }}" loading="lazy">
+    <div class="city-card-rating">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      {{ city.rating }}
+    </div>
+  </div>
+  <div class="city-card-body">
+    <h3 class="city-card-title">{{ city.name }}</h3>
+    <p class="city-card-tag">{{ city.tagline }}</p>
+    <div class="city-card-foot">
+      <div class="city-card-dots"><span></span><span></span></div>
+      <span class="city-card-cta">
+        Blueprint
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </span>
+    </div>
+  </div>
+</a>

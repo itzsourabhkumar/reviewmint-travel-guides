@@ -1,0 +1,136 @@
+{# ============================================================
+   pages/city-detail.txt   —   Route: GET /destinations/<slug>/
+   ----------------------------------------------------------
+   The full single-destination page: hero card, getting-there,
+   survival tips, 24-hour timeline, mint score gauge, ROI matrix,
+   pros/cons, budget tiers, must-try foods.
+
+   CONTEXT EXPECTED
+     city                 full Destination object — see
+                          data/destinations.txt for the shape
+     active_personality   (optional) string — used to dim
+                          itinerary items not matching this
+                          persona. Defaults to 'All'.
+
+   COMPUTED VALUES (your view should pre-compute these)
+     combined_effort       (city.matrix.money + city.matrix.fatigue) / 2
+     effort_level          'HIGH' if combined_effort > 70 else 'MID'
+     effort_level_class    'high' if combined_effort > 70 else ''
+     score_rating          city.rating * 10           (e.g. 84)
+     gauge_offset          125.6 * (1 - city.rating / 10)
+     needle_angle          -90 + (city.rating / 10) * 180
+     name_uppercase        city.name | upper
+
+   INCLUDES
+     components/reach-item.txt
+     components/tip-item.txt
+     components/timeline-step.txt
+     components/score-gauge.txt
+     components/matrix-row.txt
+     components/pros-cons.txt
+     components/budget-card.txt
+     components/must-try-card.txt
+============================================================ #}
+{% extends "layout/base.txt" %}
+
+{% block content %}
+<div class="city-view fade-in">
+  <div class="city-grid-3">
+
+    {# ---------- LEFT COLUMN ---------- #}
+    <div class="city-col-left">
+
+      <div class="city-hero-card">
+        <img src="{{ city.hero_image }}" alt="{{ city.name }}">
+        <div class="city-hero-content">
+          <div class="city-hero-watermark">{{ name_uppercase }}</div>
+          <div class="city-verified-badge">Verified Guide</div>
+          <h1 class="city-hero-title">One Day<br>in {{ city.name }}</h1>
+          <div class="city-verdict">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            {{ city.verdict }}
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h4 class="panel-heading">Getting There</h4>
+        <div class="reach-list">
+          {% for r in city.reach %}
+            {% include "components/reach-item.txt" with r=r %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="panel-emerald">
+        <h4 class="panel-heading-emerald">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Survival
+        </h4>
+        <div class="tips-list">
+          {% for tip in city.tips|slice:":3" %}
+            {% include "components/tip-item.txt" with tip=tip %}
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    {# ---------- MIDDLE COLUMN — TIMELINE ---------- #}
+    <div class="city-col-mid">
+      <div class="timeline-card">
+        <div class="timeline-head">
+          <div>
+            <h3 class="timeline-title">the timeline</h3>
+            <p class="timeline-sub">24h Blueprint</p>
+          </div>
+          <div class="timeline-tags">
+            <a href="?persona=History"
+               class="timeline-tag {% if active_personality == 'History' %}active{% endif %}">History</a>
+            <a href="?persona=Introvert"
+               class="timeline-tag {% if active_personality == 'Introvert' %}active{% endif %}">Introvert</a>
+          </div>
+        </div>
+        <div class="timeline-body">
+          <div class="timeline-line"></div>
+          {% for item in city.itinerary %}
+            {% include "components/timeline-step.txt" with item=item active_personality=active_personality %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    {# ---------- RIGHT COLUMN ---------- #}
+    <div class="city-col-right">
+
+      {% include "components/score-gauge.txt" with rating=city.rating score_rating=score_rating gauge_offset=gauge_offset needle_angle=needle_angle %}
+
+      <div class="matrix-card">
+        <h4 class="matrix-card-title">Trip ROI Analysis</h4>
+        <div class="matrix-rows">
+          {% include "components/matrix-row.txt" with label="Total Effort Intensity" value=combined_effort level=effort_level color="orange" level_class=effort_level_class %}
+          {% include "components/matrix-row.txt" with label="Visual / Soul Payoff" value=city.matrix.payoff level="ELITE" color="indigo" level_class="" %}
+        </div>
+      </div>
+
+      {% include "components/pros-cons.txt" with pros=city.pros cons=city.cons %}
+
+    </div>
+
+  </div>
+
+  {% include "components/budget-card.txt" with city=city %}
+
+  {% if city.must_try %}
+    <div class="musttry-section">
+      <h3 class="musttry-title">Must-Try Bites</h3>
+      <div class="musttry-grid">
+        {% for m in city.must_try %}
+          {% include "components/must-try-card.txt" with m=m %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

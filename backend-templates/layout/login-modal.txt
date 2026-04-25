@@ -1,0 +1,18 @@
+{# ============================================================
+   layout/login-modal.txt
+   ----------------------------------------------------------
+   Mount point for the login modal. Place this somewhere in
+   the body (typically just before the closing </body>).
+
+   The modal HTML is INJECTED by app.js when the user clicks
+   the LOGIN button — this template just provides the empty
+   container.
+
+   If you want to switch to a fully server-rendered login
+   modal (no JS), replace the empty div below with the
+   modal markup and toggle visibility via your backend.
+
+   CONTEXT EXPECTED
+     none
+============================================================ #}
+<div id="modalRoot" aria-live="polite"></div>

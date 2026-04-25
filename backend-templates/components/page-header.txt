@@ -1,0 +1,17 @@
+{# ============================================================
+   components/page-header.txt
+   ----------------------------------------------------------
+   The shared page-header pattern: small eyebrow tag + big
+   uppercase title + grey subtitle. Used at the top of
+   destinations, persona-guides, about, search, info pages.
+
+   CONTEXT EXPECTED
+     eyebrow      string — small uppercase tag above the title
+     title        string — main page title (rendered uppercase)
+     subtitle     (optional) string — descriptive sentence below
+============================================================ #}
+<div class="page-header">
+  <span class="page-eyebrow">{{ eyebrow }}</span>
+  <h1 class="page-title">{{ title }}</h1>
+  {% if subtitle %}<p class="page-subtitle">{{ subtitle }}</p>{% endif %}
+</div>

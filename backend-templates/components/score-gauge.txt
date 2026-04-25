@@ -1,0 +1,39 @@
+{# ============================================================
+   components/score-gauge.txt
+   ----------------------------------------------------------
+   The semi-circle "Mint Score" gauge with an animated needle.
+   The CSS in styles.css drives the entry animation.
+
+   CONTEXT EXPECTED
+     rating         number  — 0.0 to 10.0
+     score_rating   number  — rating * 10  (e.g. 84)
+     gauge_offset   number  — 125.6 * (1 - rating / 10)
+                              precomputed in your view
+     needle_angle   number  — -90 + (rating / 10) * 180
+                              precomputed in your view
+
+   These are precomputed because some templating engines
+   don't support arithmetic inline.
+============================================================ #}
+<div class="score-card">
+  <h4 class="score-card-title">Mint Score</h4>
+  <div class="gauge-wrap">
+    <svg class="gauge-svg" viewBox="0 0 100 60">
+      <path d="M10,50 A40,40 0 0,1 90,50"
+            fill="none" stroke="#F1F5F9"
+            stroke-width="10" stroke-linecap="round"/>
+      <path d="M10,50 A40,40 0 0,1 90,50"
+            fill="none" stroke="#00B894"
+            stroke-width="10" stroke-linecap="round"
+            stroke-dasharray="125.6"
+            stroke-dashoffset="{{ gauge_offset }}"/>
+      <line class="gauge-needle"
+            x1="50" y1="50" x2="50" y2="15"
+            stroke="#0F172A" stroke-width="3" stroke-linecap="round"
+            transform="rotate({{ needle_angle }} 50 50)"/>
+      <circle cx="50" cy="50" r="5" fill="#0F172A"/>
+    </svg>
+    <div class="gauge-value">{{ score_rating }}</div>
+  </div>
+  <p class="score-card-foot">Verified heritage quality</p>
+</div>

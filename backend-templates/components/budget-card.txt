@@ -1,0 +1,39 @@
+{# ============================================================
+   components/budget-card.txt
+   ----------------------------------------------------------
+   The "Blueprint Budget" tier card on the city detail page.
+   Three tiers (backpacker / optimum / luxury) — the "Optimum"
+   tier is highlighted larger and on-brand.
+
+   CONTEXT EXPECTED
+     city   Destination — uses city.name, city.budget.{backpacker,
+            recommended, luxury}
+============================================================ #}
+<div class="budget-card">
+  <div class="budget-head">
+    <div class="budget-icon">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h2v8a2 2 0 1 0 4 0V2"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/></svg>
+    </div>
+    <div>
+      <h4 class="budget-title">Blueprint Budget</h4>
+      <p class="budget-sub">Daily Spend in {{ city.name }}</p>
+    </div>
+  </div>
+
+  <div class="budget-tiers">
+    <div class="budget-tier">
+      <span class="budget-tier-label">Backpacker</span>
+      <div class="budget-tier-pill">{{ city.budget.backpacker }}</div>
+    </div>
+
+    <div class="budget-tier optimum">
+      <span class="budget-tier-label">Optimum Choice</span>
+      <div class="budget-tier-pill">{{ city.budget.recommended }}</div>
+    </div>
+
+    <div class="budget-tier">
+      <span class="budget-tier-label">Luxury</span>
+      <div class="budget-tier-pill">{{ city.budget.luxury }}</div>
+    </div>
+  </div>
+</div>

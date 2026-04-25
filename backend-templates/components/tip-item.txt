@@ -1,0 +1,12 @@
+{# ============================================================
+   components/tip-item.txt
+   ----------------------------------------------------------
+   One bullet in the "Survival" tips panel.
+
+   CONTEXT EXPECTED
+     tip   string — a single survival tip
+============================================================ #}
+<div class="tip-item">
+  <span class="tip-bullet"></span>
+  <p class="tip-text">{{ tip }}</p>
+</div>

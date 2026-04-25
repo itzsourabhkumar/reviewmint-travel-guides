@@ -1,0 +1,17 @@
+{# ============================================================
+   components/must-try-card.txt
+   ----------------------------------------------------------
+   One must-try food card on the city detail page.
+
+   CONTEXT EXPECTED
+     m   {name, description}
+============================================================ #}
+<div class="musttry-card">
+  <div class="musttry-icon">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h2v8a2 2 0 1 0 4 0V2"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/></svg>
+  </div>
+  <div>
+    <h4 class="musttry-name">{{ m.name }}</h4>
+    <p class="musttry-desc">{{ m.description }}</p>
+  </div>
+</div>

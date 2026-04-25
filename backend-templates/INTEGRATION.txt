@@ -1,0 +1,124 @@
+================================================================
+ReviewMint — Backend Integration Guide
+================================================================
+
+This file is a step-by-step guide for backend developers integrating
+these templates with a real backend. Examples use Django, but the
+approach maps cleanly to Flask, Express, Rails, and others.
+
+================================================================
+1. PROJECT LAYOUT (Django example)
+================================================================
+Move the contents of `backend-templates/` into your Django project:
+
+  myproject/
+    travel/
+      models.py            (port from data/destinations.txt schema)
+      views.py             (one view per page)
+      urls.py
+      templates/
+        layout/            <-- copy from layout/
+        pages/             <-- copy from pages/
+        components/        <-- copy from components/
+      static/
+        styles.css         <-- copy from assets/
+        app.js             <-- copy from assets/
+
+Rename the .txt extension to .html so Django picks them up. Or
+configure Django to recognize .txt files as templates.
+
+================================================================
+2. URL ROUTES
+================================================================
+Each page in `pages/` corresponds to one route. Suggested mapping:
+
+  GET /                          -> pages/home.html
+  GET /destinations/             -> pages/destinations.html
+  GET /destinations/<slug>/      -> pages/city-detail.html
+  GET /personas/                 -> pages/persona-guides.html
+  GET /about/                    -> pages/about.html
+  GET /search/?q=...             -> pages/search.html
+  GET /info/<topic>/             -> pages/info.html
+
+================================================================
+3. CONTEXT REQUIRED PER PAGE
+================================================================
+Each page template starts with a comment declaring its required
+context variables. Build the context in your view, then render.
+
+Example (Django view for city-detail):
+
+    def city_detail(request, slug):
+        city = get_object_or_404(Destination, slug=slug)
+        return render(request, 'pages/city-detail.html', {
+            'city': city,
+            'active_personality': request.GET.get('persona', 'All'),
+            'PERSONALITIES': PERSONALITIES,
+        })
+
+================================================================
+4. DATA MODELS
+================================================================
+See data/destinations.txt for the full data shape. For a Django
+schema reference, see MOCK_DJANGO_STRUCTURE.md in the repo root.
+
+Minimum models needed:
+  - Destination (id, name, tagline, verdict, rating, hero_image, ...)
+  - ReachOption (FK to Destination)
+  - ItineraryItem (FK to Destination, with personality tags)
+  - InfoTopic (slug, title, intro, sections)
+
+================================================================
+5. SEEDING DATA
+================================================================
+The JSON in data/destinations.txt can be loaded directly:
+
+    import json
+    with open('data/destinations.txt') as f:
+        data = json.load(f)
+    for slug, city in data.items():
+        Destination.objects.create(...)
+
+================================================================
+6. STATIC ASSETS
+================================================================
+Configure your backend to serve assets/styles.css and assets/app.js
+as static files. In Django:
+
+    STATICFILES_DIRS = [BASE_DIR / 'static']
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <script src="{% static 'app.js' %}" defer></script>
+
+================================================================
+7. APP.JS — WHAT IT STILL DOES
+================================================================
+The provided app.js handles client-side concerns that don't need
+a server roundtrip:
+  - Login modal open/close
+  - Toast notifications
+  - Newsletter form validation + toast
+
+After backend integration, the JS routing in app.js becomes
+redundant (the backend handles routes via real URLs). You can:
+  - Strip routing logic from app.js (keep only modal + toast +
+    newsletter handlers), OR
+  - Leave it as-is for now — it won't conflict with server-side
+    routing, the routing handlers just won't fire.
+
+================================================================
+8. SUBMIT URLS YOU NEED TO IMPLEMENT
+================================================================
+Forms in the templates that need backend endpoints:
+
+  POST /api/newsletter/subscribe   -> save email to mailing list
+  POST /api/auth/login             -> authenticate user
+  POST /api/reviews/submit         -> (future) submit destination review
+
+================================================================
+9. DESIGN — DO NOT CHANGE
+================================================================
+The CSS in assets/styles.css and the HTML class names in templates
+are part of a locked design system. Do not rename classes, do not
+restructure HTML, do not edit styles.css. If you need a visual
+change, talk to the design/frontend developer first.

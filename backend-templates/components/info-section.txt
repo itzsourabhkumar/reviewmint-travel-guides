@@ -1,0 +1,14 @@
+{# ============================================================
+   components/info-section.txt
+   ----------------------------------------------------------
+   One section card on a generic info page (How it Works,
+   Mint Scoring, Privacy, Terms, etc.). Each topic typically
+   has 3 of these.
+
+   CONTEXT EXPECTED
+     section   {heading, body}
+============================================================ #}
+<div class="info-section">
+  <h3>{{ section.heading }}</h3>
+  <p>{{ section.body }}</p>
+</div>

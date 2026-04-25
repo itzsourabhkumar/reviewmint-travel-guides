@@ -1,0 +1,23 @@
+{# ============================================================
+   components/matrix-row.txt
+   ----------------------------------------------------------
+   One row in the Trip ROI matrix card. The bar fill animates
+   from 0% to {value}% on page load (driven by app.js or CSS).
+
+   CONTEXT EXPECTED
+     label        string — row title (e.g. "Total Effort Intensity")
+     value        number — fill percentage 0..100
+     level        string — text on the right (e.g. "HIGH", "MID", "ELITE")
+     color        string — 'orange' or 'indigo' (CSS modifier class)
+     level_class  string — 'high' to color the level orange,
+                            empty for default brand colour
+============================================================ #}
+<div class="matrix-row">
+  <div class="matrix-row-head">
+    <span class="label">{{ label }}</span>
+    <span class="level {{ level_class }}">{{ level }}</span>
+  </div>
+  <div class="matrix-bar">
+    <div class="matrix-fill {{ color }}" data-target="{{ value }}"></div>
+  </div>
+</div>

@@ -1,0 +1,42 @@
+{# ============================================================
+   pages/persona-guides.txt   —   Route: GET /personas/?p=<personality>
+   ----------------------------------------------------------
+   Persona filter page. User picks a personality (or visits with
+   a `p` query parameter); we show the destinations whose
+   itinerary contains an item matching that persona.
+
+   CONTEXT EXPECTED
+     active_personality   string — one of the persona ids
+                          (defaults to 'All' if none selected)
+     destinations         list of DestinationSummary that match
+                          the active_personality
+     personalities        list of {id, icon}
+
+   INCLUDES
+     components/page-header.txt
+     components/persona-strip.txt
+     components/city-card.txt
+============================================================ #}
+{% extends "layout/base.txt" %}
+
+{% block content %}
+<div class="fade-in">
+
+  {% include "components/page-header.txt" with eyebrow="Travel by Personality" title="Persona Guides" subtitle="Pick how you travel. We will show you the blueprints that suit your rhythm." %}
+
+  <section class="container" style="padding-bottom: 5rem;">
+    {% include "components/persona-strip.txt" with active=active_personality label="Pick One" %}
+
+    {% if destinations %}
+      <div class="city-grid">
+        {% for city in destinations %}
+          {% include "components/city-card.txt" with city=city %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">No blueprints yet for "{{ active_personality }}".</div>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}
