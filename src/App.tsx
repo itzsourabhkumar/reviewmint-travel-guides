@@ -46,17 +46,70 @@ type View =
   | { kind: 'search'; query: string }
   | { kind: 'info'; topic: InfoTopic };
 
+const INFO_TOPICS: InfoTopic[] = [
+  'how-it-works', 'mint-scoring', 'careers', 'travel-tribes',
+  'ambassadors', 'support', 'privacy', 'terms', 'cookies'
+];
+
+function viewToUrl(v: View): string {
+  switch (v.kind) {
+    case 'home':         return '/';
+    case 'city':         return `/city/${encodeURIComponent(v.cityId)}`;
+    case 'destinations': return '/destinations';
+    case 'personas':     return '/personas';
+    case 'about':        return '/about';
+    case 'search':       return v.query ? `/search?q=${encodeURIComponent(v.query)}` : '/search';
+    case 'info':         return `/info/${v.topic}`;
+  }
+}
+
+function urlToView(pathname: string, search: string): View {
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length === 0) return { kind: 'home' };
+  const [head, ...rest] = segments;
+  if (head === 'city' && rest[0]) return { kind: 'city', cityId: decodeURIComponent(rest[0]) };
+  if (head === 'destinations')    return { kind: 'destinations' };
+  if (head === 'personas')        return { kind: 'personas' };
+  if (head === 'about')           return { kind: 'about' };
+  if (head === 'search') {
+    const q = new URLSearchParams(search).get('q') ?? '';
+    return { kind: 'search', query: q };
+  }
+  if (head === 'info' && rest[0] && (INFO_TOPICS as string[]).includes(rest[0])) {
+    return { kind: 'info', topic: rest[0] as InfoTopic };
+  }
+  return { kind: 'home' };
+}
+
 export default function App() {
-  const [view, setView] = useState<View>({ kind: 'home' });
+  const [view, setView] = useState<View>(() =>
+    urlToView(window.location.pathname, window.location.search)
+  );
   const [activePersonality, setActivePersonality] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [loginOpen, setLoginOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const heroSearchRef = useRef<HTMLInputElement>(null);
 
+  // Seed the initial history entry so a future popstate has a state to restore to.
+  useEffect(() => {
+    if (window.history.state == null) {
+      window.history.replaceState(view, '', viewToUrl(view));
+    }
+    const onPop = (e: PopStateEvent) => {
+      const next: View = e.state ?? urlToView(window.location.pathname, window.location.search);
+      setView(next);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
   const navigate = (next: View) => {
     setView(next);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const url = viewToUrl(next);
+    if (url !== window.location.pathname + window.location.search) {
+      window.history.pushState(next, '', url);
+    }
   };
 
   const openCity = (cityId: string) => {
@@ -65,6 +118,7 @@ export default function App() {
       return;
     }
     navigate({ kind: 'city', cityId });
+    window.scrollTo(0, 0);
   };
 
   const submitSearch = (q: string) => {
@@ -635,12 +689,12 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
         {/* Right Column */}
         <div className="lg:col-span-3 order-3 space-y-8">
           <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 text-center">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-10">{t.mintScoreTitle}</h4>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-8">{t.mintScoreTitle}</h4>
 
-            <div className="relative w-full aspect-[2/1.4] flex items-center justify-center">
-              <svg className="w-48 h-48 gauge-svg" viewBox="0 0 100 60">
+            <div className="relative w-full max-w-[220px] mx-auto">
+              <svg className="w-full h-auto block gauge-svg" viewBox="0 0 100 60">
                 <path d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke="#F1F5F9" strokeWidth="10" strokeLinecap="round" />
-                <path d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke="#00B894" strokeWidth="10" strokeLinecap="round" strokeDasharray="125.6" strokeDashoffset={125.6 * (1 - city.rating / 10)} />
+                <path d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke="#00B894" strokeWidth="10" strokeLinecap="round" strokeDasharray="125.6" strokeDashoffset={125.6 * (city.rating / 10 - 1)} />
                 <motion.line
                   initial={{ rotate: -90 }}
                   animate={{ rotate: -90 + (city.rating / 10 * 180) }}
@@ -651,7 +705,7 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
                 />
                 <circle cx="50" cy="50" r="5" fill="#0F172A" />
               </svg>
-              <div className="absolute bottom-4 text-4xl font-black text-slate-950 tracking-tighter">
+              <div className="text-4xl font-black text-slate-950 tracking-tighter -mt-4">
                 {Math.round(city.rating * 10)}
               </div>
             </div>

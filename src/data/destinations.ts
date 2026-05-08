@@ -5,6 +5,8 @@ export interface Destination {
   verdict: string;
   rating: number;
   heroImage: string;
+  // Optional: image used in city cards / grids. Falls back to heroImage when absent.
+  cardImage?: string;
   reach: { type: string; detail: string; time?: string; hub: string; cost: string }[];
   budget: { backpacker: string; recommended: string; luxury: string };
   pros: string[];
@@ -172,7 +174,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     tagline: "Venice of the East",
     verdict: "Romance in Stone and Water",
     rating: 9.0,
-    heroImage: "https://images.unsplash.com/photo-1585484173186-ee21c3e9b30d?q=80&w=2070&auto=format&fit=crop",
+    heroImage: "https://images.unsplash.com/photo-1615836245337-f5b9b2303f10?q=80&w=2070&auto=format&fit=crop",
     reach: [
       { type: "Flight", detail: "1h 30m from Delhi", hub: "IGIA to UDR", cost: "₹3,500+" },
       { type: "Train", detail: "Mewar Express", time: "12h overnight from Delhi", hub: "Udaipur City", cost: "₹1,400+" },
@@ -206,7 +208,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     tagline: "Yoga Capital of the World",
     verdict: "A Reset for Body and Mind",
     rating: 8.6,
-    heroImage: "https://images.unsplash.com/photo-1591018653851-c1f97b89bc40?q=80&w=2070&auto=format&fit=crop",
+    heroImage: "https://images.unsplash.com/photo-1720819029162-8500607ae232?q=80&w=2070&auto=format&fit=crop",
     reach: [
       { type: "Flight", detail: "55m from Delhi", hub: "IGIA to DED (Dehradun)", cost: "₹3,200+" },
       { type: "Train", detail: "Nanda Devi Express", time: "5h from Delhi", hub: "Haridwar Jn", cost: "₹600+" },
@@ -273,7 +275,7 @@ export const DESTINATION_LIST: DestinationSummary[] = Object.values(DESTINATIONS
   id: d.id,
   name: d.name,
   tagline: d.tagline,
-  image: d.heroImage,
+  image: d.cardImage ?? d.heroImage,
   rating: d.rating.toFixed(1)
 }));
 
@@ -299,7 +301,7 @@ export function destinationsForPersona(personality: string): DestinationSummary[
       id: d.id,
       name: d.name,
       tagline: d.tagline,
-      image: d.heroImage,
+      image: d.cardImage ?? d.heroImage,
       rating: d.rating.toFixed(1)
     }));
 }
