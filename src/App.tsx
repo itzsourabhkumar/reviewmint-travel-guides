@@ -29,10 +29,12 @@ import {
   ABOUT_PILLARS,
   DESTINATION_LIST,
   ALL_CITIES_LIST,
+  LITE_CITIES,
   getDestination,
   searchDestinations,
   destinationsForPersona,
   type Destination,
+  type LiteCity,
   type InfoTopic
 } from './content';
 
@@ -123,9 +125,9 @@ export default function App() {
   };
 
   const openCity = (cityId: string) => {
-    if (!getDestination(cityId)) {
-      const friendly = ALL_CITIES_LIST.find(c => c.id === cityId)?.name ?? cityId;
-      showToast(SITE_TEXT.toasts.cityComingSoon(friendly));
+    const isKnown = !!getDestination(cityId) || LITE_CITIES.some(c => c.id === cityId);
+    if (!isKnown) {
+      showToast(SITE_TEXT.toasts.cityComingSoon(cityId));
       return;
     }
     navigate({ kind: 'city', cityId });
@@ -158,6 +160,9 @@ export default function App() {
   }, [toast]);
 
   const selectedCity = view.kind === 'city' ? getDestination(view.cityId) : null;
+  const selectedLiteCity = view.kind === 'city' && !selectedCity
+    ? (LITE_CITIES.find(c => c.id === view.cityId) ?? null)
+    : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-surface-bg">
@@ -210,6 +215,12 @@ export default function App() {
             city={selectedCity}
             activePersonality={activePersonality}
             setActivePersonality={setActivePersonality}
+          />
+        )}
+        {view.kind === 'city' && !selectedCity && selectedLiteCity && (
+          <LiteCityView
+            city={selectedLiteCity}
+            onExploreVerified={() => navigate({ kind: 'destinations' })}
           />
         )}
         {view.kind === 'destinations' && (
@@ -842,6 +853,80 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
           </div>
         </div>
       )}
+    </motion.div>
+  );
+}
+
+function LiteCityView({ city, onExploreVerified }: { city: LiteCity; onExploreVerified: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="max-w-5xl mx-auto px-4 py-8"
+    >
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="relative rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-300 aspect-[16/9] mb-8"
+      >
+        <img src={city.image} className="absolute inset-0 w-full h-full object-cover" alt={city.name} />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent"></div>
+        <div className="absolute inset-0 p-8 md:p-12 flex flex-col justify-end">
+          <div className="bg-brand text-slate-950 text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full w-fit mb-4 shadow-lg">Quick Overview</div>
+          <h1 className="text-5xl md:text-7xl text-white font-black mb-3 leading-tight tracking-tight uppercase">{city.name}</h1>
+          <p className="text-white/80 text-base md:text-lg font-medium tracking-wide">{city.state} — {city.tagline}</p>
+        </div>
+      </motion.div>
+
+      <div className="bg-brand/5 border border-brand/20 rounded-[2rem] p-6 mb-8 flex items-start gap-4">
+        <AlertCircle size={20} className="text-brand shrink-0 mt-0.5" />
+        <div>
+          <h4 className="text-sm font-black uppercase tracking-tight text-brand mb-1">Full Blueprint In Production</h4>
+          <p className="text-[13px] text-slate-600 leading-relaxed">
+            A locally-verified 24-hour blueprint for {city.name} is being walked end-to-end by our reviewers. The overview below is drawn from community data while we finalize the full guide.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-6 border-b border-slate-50 pb-4">Top Highlights</h4>
+          <div className="space-y-4">
+            {city.attractions.map((a, i) => (
+              <div key={a} className="flex items-center gap-5 group">
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-500 group-hover:bg-brand group-hover:text-slate-950 transition-all font-black text-sm">
+                  {String(i + 1).padStart(2, '0')}
+                </div>
+                <h5 className="text-[14px] font-black text-slate-800">{a}</h5>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-slate-950 rounded-[2.5rem] p-8 shadow-2xl shadow-slate-950/40 text-white">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-6">Best For</h4>
+          <div className="flex flex-wrap gap-2">
+            {city.bestFor.map(b => (
+              <span key={b} className="bg-white/10 text-white px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest">{b}</span>
+            ))}
+          </div>
+          <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mt-8 mb-6">Personality Fit</h4>
+          <div className="flex flex-wrap gap-2">
+            {city.personalities.map(p => (
+              <span key={p} className="bg-brand text-slate-950 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest">{p}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-12 text-center">
+        <button
+          onClick={onExploreVerified}
+          className="bg-slate-950 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-brand hover:text-slate-950 transition-colors inline-flex items-center gap-3"
+        >
+          Browse Verified Blueprints <ArrowRight size={14} />
+        </button>
+      </div>
     </motion.div>
   );
 }

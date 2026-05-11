@@ -35,7 +35,9 @@ import {
 // "./content". To edit the cities themselves, open
 // src/data/destinations.ts.
 export { DESTINATIONS, DESTINATION_LIST, ALL_CITIES_LIST, getDestination, searchDestinations, destinationsForPersona } from './data/destinations';
+export { LITE_CITIES } from './data/cityDirectory';
 export type { Destination, DestinationSummary } from './data/destinations';
+export type { LiteCity } from './data/cityDirectory';
 
 // ----- View kinds (don't edit unless you're adding new pages) -----
 export type InfoTopic =
