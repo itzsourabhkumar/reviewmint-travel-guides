@@ -28,13 +28,15 @@ import {
   INFO_CONTENT,
   ABOUT_PILLARS,
   DESTINATION_LIST,
+  ALL_CITIES_LIST,
   getDestination,
   searchDestinations,
   destinationsForPersona,
   type Destination,
-  type DestinationSummary,
   type InfoTopic
 } from './content';
+
+const HOME_PAGE_SIZE = 15;
 
 // --- View State ---
 type View =
@@ -122,7 +124,8 @@ export default function App() {
 
   const openCity = (cityId: string) => {
     if (!getDestination(cityId)) {
-      showToast(SITE_TEXT.toasts.cityComingSoon(cityId));
+      const friendly = ALL_CITIES_LIST.find(c => c.id === cityId)?.name ?? cityId;
+      showToast(SITE_TEXT.toasts.cityComingSoon(friendly));
       return;
     }
     navigate({ kind: 'city', cityId });
@@ -471,10 +474,16 @@ function HomeView({
   onSubmitSearch: (q: string) => void;
   heroSearchRef: React.RefObject<HTMLInputElement | null>;
 }) {
-  const visibleCities = useMemo(
-    () => activePersonality === 'All' ? DESTINATION_LIST : destinationsForPersona(activePersonality),
+  const filteredCities = useMemo(
+    () => activePersonality === 'All' ? ALL_CITIES_LIST : destinationsForPersona(activePersonality),
     [activePersonality]
   );
+
+  const [page, setPage] = useState(1);
+  useEffect(() => { setPage(1); }, [activePersonality]);
+  const pageCount = Math.max(1, Math.ceil(filteredCities.length / HOME_PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const visibleCities = filteredCities.slice((safePage - 1) * HOME_PAGE_SIZE, safePage * HOME_PAGE_SIZE);
 
   return (
     <motion.div
@@ -562,13 +571,46 @@ function HomeView({
             />
           ))}
         </div>
-        {visibleCities.length === 0 && (
+        {filteredCities.length === 0 && (
           <div className="text-center py-20 text-slate-400 text-sm font-bold uppercase tracking-widest">
             {SITE_TEXT.emptyStates.homePersonaNoMatch}
           </div>
         )}
+
+        {pageCount > 1 && (
+          <Pagination page={safePage} pageCount={pageCount} onChange={setPage} />
+        )}
       </section>
     </motion.div>
+  );
+}
+
+function Pagination({ page, pageCount, onChange }: { page: number; pageCount: number; onChange: (p: number) => void }) {
+  const prevDisabled = page <= 1;
+  const nextDisabled = page >= pageCount;
+  const btn = "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all";
+  return (
+    <div className="flex items-center justify-center gap-4 mt-12">
+      <button
+        type="button"
+        onClick={() => onChange(page - 1)}
+        disabled={prevDisabled}
+        className={`${btn} ${prevDisabled ? 'border-slate-100 text-slate-300 cursor-not-allowed' : 'border-slate-200 text-slate-700 hover:border-brand hover:text-brand'}`}
+      >
+        Prev
+      </button>
+      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+        Page {page} of {pageCount}
+      </span>
+      <button
+        type="button"
+        onClick={() => onChange(page + 1)}
+        disabled={nextDisabled}
+        className={`${btn} ${nextDisabled ? 'border-slate-100 text-slate-300 cursor-not-allowed' : 'border-slate-200 text-slate-700 hover:border-brand hover:text-brand'}`}
+      >
+        Next
+      </button>
+    </div>
   );
 }
 

@@ -34,7 +34,7 @@ import {
 // Re-export destinations so the editor only needs to import from
 // "./content". To edit the cities themselves, open
 // src/data/destinations.ts.
-export { DESTINATIONS, DESTINATION_LIST, getDestination, searchDestinations, destinationsForPersona } from './data/destinations';
+export { DESTINATIONS, DESTINATION_LIST, ALL_CITIES_LIST, getDestination, searchDestinations, destinationsForPersona } from './data/destinations';
 export type { Destination, DestinationSummary } from './data/destinations';
 
 // ----- View kinds (don't edit unless you're adding new pages) -----

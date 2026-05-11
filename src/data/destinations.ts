@@ -29,6 +29,10 @@ export interface DestinationSummary {
   tagline: string;
   image: string;
   rating: string;
+  // Mapped personality tags used by the home/persona filters. For full
+  // destinations this is computed from the itinerary; for lite cities
+  // it comes from src/data/cityDirectory.ts.
+  personalities: string[];
 }
 
 export const DESTINATIONS: Record<string, Destination> = {
@@ -271,13 +275,25 @@ export const DESTINATIONS: Record<string, Destination> = {
   }
 };
 
+import { liteCitiesAsSummary } from './cityDirectory';
+
+// Verified cities: the 7 with full 24-hour blueprints.
+// Used by /destinations, /personas curated page, About-page count.
 export const DESTINATION_LIST: DestinationSummary[] = Object.values(DESTINATIONS).map(d => ({
   id: d.id,
   name: d.name,
   tagline: d.tagline,
   image: d.cardImage ?? d.heroImage,
-  rating: d.rating.toFixed(1)
+  rating: d.rating.toFixed(1),
+  personalities: Array.from(new Set(d.itinerary.flatMap(i => i.personalities))),
 }));
+
+// All tracked cities: verified + lite directory entries from xlsx.
+// Used by the home grid (with pagination) and global search.
+export const ALL_CITIES_LIST: DestinationSummary[] = [
+  ...DESTINATION_LIST,
+  ...liteCitiesAsSummary(),
+];
 
 export function getDestination(id: string): Destination | null {
   return DESTINATIONS[id] ?? null;
@@ -285,8 +301,8 @@ export function getDestination(id: string): Destination | null {
 
 export function searchDestinations(query: string): DestinationSummary[] {
   const q = query.trim().toLowerCase();
-  if (!q) return DESTINATION_LIST;
-  return DESTINATION_LIST.filter(d =>
+  if (!q) return ALL_CITIES_LIST;
+  return ALL_CITIES_LIST.filter(d =>
     d.name.toLowerCase().includes(q) ||
     d.tagline.toLowerCase().includes(q) ||
     d.id.toLowerCase().includes(q)
@@ -294,14 +310,6 @@ export function searchDestinations(query: string): DestinationSummary[] {
 }
 
 export function destinationsForPersona(personality: string): DestinationSummary[] {
-  if (personality === 'All') return DESTINATION_LIST;
-  return Object.values(DESTINATIONS)
-    .filter(d => d.itinerary.some(item => item.personalities.includes(personality)))
-    .map(d => ({
-      id: d.id,
-      name: d.name,
-      tagline: d.tagline,
-      image: d.cardImage ?? d.heroImage,
-      rating: d.rating.toFixed(1)
-    }));
+  if (personality === 'All') return ALL_CITIES_LIST;
+  return ALL_CITIES_LIST.filter(d => d.personalities.includes(personality));
 }
