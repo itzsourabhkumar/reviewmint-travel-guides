@@ -51,20 +51,28 @@ const INFO_TOPICS: InfoTopic[] = [
   'ambassadors', 'support', 'privacy', 'terms', 'cookies'
 ];
 
+// import.meta.env.BASE_URL always has a trailing slash; normalize to no trailing slash.
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 function viewToUrl(v: View): string {
-  switch (v.kind) {
-    case 'home':         return '/';
-    case 'city':         return `/city/${encodeURIComponent(v.cityId)}`;
-    case 'destinations': return '/destinations';
-    case 'personas':     return '/personas';
-    case 'about':        return '/about';
-    case 'search':       return v.query ? `/search?q=${encodeURIComponent(v.query)}` : '/search';
-    case 'info':         return `/info/${v.topic}`;
-  }
+  const path = (() => {
+    switch (v.kind) {
+      case 'home':         return '/';
+      case 'city':         return `/city/${encodeURIComponent(v.cityId)}`;
+      case 'destinations': return '/destinations';
+      case 'personas':     return '/personas';
+      case 'about':        return '/about';
+      case 'search':       return v.query ? `/search?q=${encodeURIComponent(v.query)}` : '/search';
+      case 'info':         return `/info/${v.topic}`;
+    }
+  })();
+  return BASE + path;
 }
 
 function urlToView(pathname: string, search: string): View {
-  const segments = pathname.split('/').filter(Boolean);
+  let p = pathname;
+  if (BASE && p.startsWith(BASE)) p = p.slice(BASE.length);
+  const segments = p.split('/').filter(Boolean);
   if (segments.length === 0) return { kind: 'home' };
   const [head, ...rest] = segments;
   if (head === 'city' && rest[0]) return { kind: 'city', cityId: decodeURIComponent(rest[0]) };
