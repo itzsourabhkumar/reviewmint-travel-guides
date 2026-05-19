@@ -71,6 +71,31 @@ export const PERSONALITIES = [
 ];
 
 // ============================================================
+//  DISCOVERY FILTERS (homepage filter bar)
+//  These ids must match the `moods` strings used in
+//  src/data/destinations.ts and the budget tiers returned by
+//  budgetTierOf(). Edit labels here only.
+// ============================================================
+export const MOODS = [
+  'Heritage', 'Nature', 'Beach', 'Mountains', 'Food',
+  'Spiritual', 'Urban', 'Adventure', 'Wellness', 'Culture',
+] as const;
+
+export const BUDGET_TIERS = ['Budget', 'Mid-range', 'Premium'] as const;
+
+export const SORT_OPTIONS = [
+  { id: 'relevance',  label: 'Relevance' },
+  { id: 'score-desc', label: 'Mint Score: High → Low' },
+  { id: 'score-asc',  label: 'Mint Score: Low → High' },
+  { id: 'az',         label: 'A–Z' },
+  { id: 'za',         label: 'Z–A' },
+  { id: 'newest',     label: 'Newest → Oldest' },
+  { id: 'oldest',     label: 'Oldest → Newest' },
+] as const;
+
+export type SortId = typeof SORT_OPTIONS[number]['id'];
+
+// ============================================================
 //  INFO PAGES
 //  These show up at /info/<topic>. To add a new topic, add an
 //  entry here AND a new value to InfoTopic above AND wire it
@@ -210,6 +235,18 @@ export const SITE_TEXT = {
 
   cityCard: {
     blueprintCta: 'Blueprint'
+  },
+
+  filterBar: {
+    sortLabel:        'Sort By',
+    personalityLabel: 'Personality',
+    moodLabel:        'Travel Type',
+    budgetLabel:      'Budget',
+    clearFilters:     'Clear Filters',
+    activeLabel:      'Active',
+    results:          (n: number) => `${n} ${n === 1 ? 'city' : 'cities'}`,
+    liveSearchHint:   'Matches',
+    noLiveMatches:    'No cities match yet — keep typing.'
   },
 
   cityDetail: {
