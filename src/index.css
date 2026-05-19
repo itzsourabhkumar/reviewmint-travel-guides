@@ -45,9 +45,33 @@
   scrollbar-width: none;
 }
 
-/* Home Page specific grid */
+/* Strict, evenly-distributed city grid: 1 → 2 → 3 → 4 columns.
+   At the lg breakpoint this is a 4-wide grid; paired with a 12-per-page
+   size it renders as a clean 4×3 block with no ragged trailing gaps. */
 .city-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: 1.5rem;
 }
+@media (min-width: 640px) {
+  .city-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 768px) {
+  .city-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .city-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Horizontal live-search results strip */
+.live-strip {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  padding-bottom: 0.5rem;
+}
+.live-strip::-webkit-scrollbar { display: none; }
+.live-strip > * { scroll-snap-align: start; flex: 0 0 auto; }
