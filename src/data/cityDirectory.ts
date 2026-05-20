@@ -34,6 +34,7 @@ export function liteCitiesAsSummary(): DestinationSummary[] {
     rating: 'NEW',
     personalities: c.personalities,
     moods: [],
+    travelerType: [],
     score: 0,
     budgetTier: 'Budget' as const,
     order: 10_000 + i,

@@ -29,7 +29,7 @@ import {
   SITE_TEXT,
   PERSONALITIES,
   MOODS,
-  BUDGET_TIERS,
+  TRAVELER_TYPES,
   SORT_OPTIONS,
   INFO_CONTENT,
   ABOUT_PILLARS,
@@ -185,6 +185,15 @@ export default function App() {
             <span className="font-display text-2xl font-black text-white tracking-tighter">{SITE_TEXT.brand.name}<span className="text-brand">{SITE_TEXT.brand.nameAccent}</span></span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-400">
+            {/* City-page-only live search; placed before the Home button. */}
+            {view.kind === 'city' && (
+              <NavSearch
+                query={searchQuery}
+                setQuery={setSearchQuery}
+                onCityClick={openCity}
+              />
+            )}
+            <NavLink active={view.kind === 'home'}         onClick={() => navigate({ kind: 'home' })}>{SITE_TEXT.nav.home}</NavLink>
             <NavLink active={view.kind === 'destinations'} onClick={() => navigate({ kind: 'destinations' })}>{SITE_TEXT.nav.destinations}</NavLink>
             <NavLink active={view.kind === 'personas'}     onClick={() => navigate({ kind: 'personas' })}>{SITE_TEXT.nav.personaGuides}</NavLink>
             <NavLink active={view.kind === 'about'}        onClick={() => navigate({ kind: 'about' })}>{SITE_TEXT.nav.about}</NavLink>
@@ -494,26 +503,31 @@ function HomeView({
   heroSearchRef: React.RefObject<HTMLInputElement | null>;
 }) {
   // --- Discovery filter + sort state (works across all pages) ---
-  const [personality, setPersonality] = useState('All');
+  // Multi-select within each group; "All" is no longer a personality
+  // option — it lives on its own pill (see FilterBar) that resets state.
+  const [personalities, setPersonalities] = useState<string[]>([]);
   const [moods, setMoods] = useState<string[]>([]);
-  const [budget, setBudget] = useState<string | null>(null);
+  const [travelers, setTravelers] = useState<string[]>([]);
   const [sortId, setSortId] = useState<SortId>('relevance');
 
   const filteredCities = useMemo(
-    () => filterAndSortCities(ALL_CITIES_LIST, { personality, moods, budget, sortId }),
-    [personality, moods, budget, sortId]
+    () => filterAndSortCities(ALL_CITIES_LIST, { personalities, moods, travelers, sortId }),
+    [personalities, moods, travelers, sortId]
   );
 
   const [page, setPage] = useState(1);
-  useEffect(() => { setPage(1); }, [personality, moods, budget, sortId]);
+  useEffect(() => { setPage(1); }, [personalities, moods, travelers, sortId]);
   const pageCount = Math.max(1, Math.ceil(filteredCities.length / HOME_PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
   const visibleCities = filteredCities.slice((safePage - 1) * HOME_PAGE_SIZE, safePage * HOME_PAGE_SIZE);
 
-  const toggleMood = (m: string) =>
-    setMoods(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
-  const clearFilters = () => { setPersonality('All'); setMoods([]); setBudget(null); setSortId('relevance'); };
-  const hasActiveFilters = personality !== 'All' || moods.length > 0 || budget !== null;
+  const toggleIn = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (v: string) =>
+    setter(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v]);
+  const togglePersonality = toggleIn(setPersonalities);
+  const toggleMood        = toggleIn(setMoods);
+  const toggleTraveler    = toggleIn(setTravelers);
+  const clearFilters = () => { setPersonalities([]); setMoods([]); setTravelers([]); };
+  const hasActiveFilters = personalities.length > 0 || moods.length > 0 || travelers.length > 0;
 
   // Live, button-free search preview strip (partial / prefix / progressive).
   const liveResults = useMemo(
@@ -618,12 +632,12 @@ function HomeView({
         </AnimatePresence>
 
         <FilterBar
-          personality={personality}
-          setPersonality={setPersonality}
+          personalities={personalities}
+          togglePersonality={togglePersonality}
           moods={moods}
           toggleMood={toggleMood}
-          budget={budget}
-          setBudget={setBudget}
+          travelers={travelers}
+          toggleTraveler={toggleTraveler}
           sortId={sortId}
           setSortId={setSortId}
           resultCount={filteredCities.length}
@@ -661,13 +675,15 @@ function HomeView({
 
 function filterAndSortCities(
   list: DestinationSummary[],
-  opts: { personality: string; moods: string[]; budget: string | null; sortId: SortId }
+  opts: { personalities: string[]; moods: string[]; travelers: string[]; sortId: SortId }
 ): DestinationSummary[] {
-  const { personality, moods, budget, sortId } = opts;
+  const { personalities, moods, travelers, sortId } = opts;
+  // Within each group: OR (city matches if it shares any selected tag).
+  // Across groups: AND (city must pass every active group).
   let out = list.filter(c =>
-    (personality === 'All' || c.personalities.includes(personality)) &&
-    (moods.length === 0 || moods.some(m => c.moods.includes(m))) &&
-    (budget === null || c.budgetTier === budget)
+    (personalities.length === 0 || personalities.some(p => c.personalities.includes(p))) &&
+    (moods.length        === 0 || moods.some(m => c.moods.includes(m))) &&
+    (travelers.length    === 0 || travelers.some(t => c.travelerType.includes(t)))
   );
   const byName = (a: DestinationSummary, b: DestinationSummary) => a.name.localeCompare(b.name);
   switch (sortId) {
@@ -715,34 +731,49 @@ function FilterChip({ active, onClick, children, accent }: any) {
   );
 }
 
+// Compact premium filter bar: a global "All" reset pill plus three
+// collapsible dropdown groups (Personality / Travel Type / Traveler
+// Type) — only one expanded at a time. Selections are multi-select
+// within each group; cities matching any selected tag in a group pass.
 function FilterBar({
-  personality, setPersonality, moods, toggleMood, budget, setBudget,
+  personalities, togglePersonality, moods, toggleMood, travelers, toggleTraveler,
   sortId, setSortId, resultCount, hasActiveFilters, onClear
-}: {
-  personality: string;
-  setPersonality: (p: string) => void;
-  moods: string[];
-  toggleMood: (m: string) => void;
-  budget: string | null;
-  setBudget: (b: string | null) => void;
-  sortId: SortId;
-  setSortId: (s: SortId) => void;
-  resultCount: number;
-  hasActiveFilters: boolean;
-  onClear: () => void;
-}) {
+}: any) {
   const t = SITE_TEXT.filterBar;
-  const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div className="flex items-start gap-4 py-4 border-t border-slate-50 first:border-t-0">
-      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 w-24 shrink-0 pt-2.5 hidden md:block">{label}</span>
-      <div className="flex gap-2 overflow-x-auto no-scrollbar flex-1 py-0.5">{children}</div>
-    </div>
+  const [openGroup, setOpenGroup] = useState<null | 'personality' | 'mood' | 'traveler'>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+
+  // Close the dropdown panel on outside click.
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (barRef.current && !barRef.current.contains(e.target as Node)) setOpenGroup(null);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const groupBtn = (id: 'personality' | 'mood' | 'traveler', label: string, count: number) => (
+    <button
+      type="button"
+      onClick={() => setOpenGroup(g => g === id ? null : id)}
+      className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+        openGroup === id
+          ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20'
+          : count > 0
+            ? 'bg-brand text-slate-950 shadow-lg shadow-brand/20'
+            : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+      }`}
+    >
+      {label}
+      {count > 0 && <span className="bg-white/30 px-1.5 py-0.5 rounded text-[9px]">{count}</span>}
+      <ChevronDown size={12} className={`transition-transform ${openGroup === id ? 'rotate-180' : ''}`} />
+    </button>
   );
 
   return (
-    <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-xl shadow-slate-200/40 mb-12 border border-slate-100/50">
-      {/* Header: title · result count · sort · clear */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-50">
+    <div ref={barRef} className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-xl shadow-slate-200/40 mb-12 border border-slate-100/50">
+      {/* Top row: result count · global All reset · 3 group buttons · sort · clear */}
+      <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-slate-950 rounded-xl flex items-center justify-center text-brand shrink-0">
             <SlidersHorizontal size={16} />
@@ -751,66 +782,88 @@ function FilterBar({
             {t.results(resultCount)}
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <select
-              value={sortId}
-              onChange={(e) => setSortId(e.target.value as SortId)}
-              className="appearance-none bg-slate-50 border border-slate-100 rounded-xl pl-4 pr-10 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-700 focus:outline-none focus:border-brand cursor-pointer hover:bg-slate-100 transition-colors"
-              aria-label={t.sortLabel}
-            >
-              {SORT_OPTIONS.map(o => (
-                <option key={o.id} value={o.id}>{t.sortLabel}: {o.label}</option>
-              ))}
-            </select>
-            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          </div>
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={onClear}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 hover:bg-rose-100 transition-colors"
-            >
-              <RotateCcw size={13} /> {t.clearFilters}
-            </button>
-          )}
+
+        {/* Global "All" reset — highlighted when no filters are active.
+            Clicking it clears every group; selecting any filter implicitly
+            exits "All" mode (it becomes un-highlighted). */}
+        <button
+          type="button"
+          onClick={onClear}
+          className={`ml-2 flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+            !hasActiveFilters
+              ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20'
+              : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+          }`}
+        >
+          <TrendingUp size={14} />{t.allLabel}
+        </button>
+
+        {groupBtn('personality', t.personalityLabel, personalities.length)}
+        {groupBtn('mood',        t.moodLabel,        moods.length)}
+        {groupBtn('traveler',    t.travelerLabel,    travelers.length)}
+
+        <div className="relative ml-auto">
+          <select
+            value={sortId}
+            onChange={(e) => setSortId(e.target.value as SortId)}
+            className="appearance-none bg-slate-50 border border-slate-100 rounded-xl pl-4 pr-10 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-700 focus:outline-none focus:border-brand cursor-pointer hover:bg-slate-100 transition-colors"
+            aria-label={t.sortLabel}
+          >
+            {SORT_OPTIONS.map(o => (
+              <option key={o.id} value={o.id}>{t.sortLabel}: {o.label}</option>
+            ))}
+          </select>
+          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
+
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 hover:bg-rose-100 transition-colors"
+          >
+            <RotateCcw size={13} /> {t.clearFilters}
+          </button>
+        )}
       </div>
 
-      <Row label={t.personalityLabel}>
-        {PERSONALITIES.map(p => (
-          <FilterChip key={p.id} active={personality === p.id} onClick={() => setPersonality(p.id)}>
-            {p.icon}{p.id}
-          </FilterChip>
-        ))}
-      </Row>
+      {/* Expandable panel — only the currently-open group renders here. */}
+      <AnimatePresence>
+        {openGroup && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-wrap gap-2 pt-5 mt-5 border-t border-slate-50">
+              {openGroup === 'personality' && PERSONALITIES.filter(p => p.id !== 'All').map(p => (
+                <FilterChip key={p.id} active={personalities.includes(p.id)} onClick={() => togglePersonality(p.id)}>
+                  {p.icon}{p.id}
+                </FilterChip>
+              ))}
+              {openGroup === 'mood' && MOODS.map(m => (
+                <FilterChip key={m} active={moods.includes(m)} accent="brand" onClick={() => toggleMood(m)}>
+                  {m}
+                </FilterChip>
+              ))}
+              {openGroup === 'traveler' && TRAVELER_TYPES.map(tv => (
+                <FilterChip key={tv} active={travelers.includes(tv)} onClick={() => toggleTraveler(tv)}>
+                  {tv}
+                </FilterChip>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <Row label={t.moodLabel}>
-        {MOODS.map(m => (
-          <FilterChip key={m} active={moods.includes(m)} accent="brand" onClick={() => toggleMood(m)}>
-            {m}
-          </FilterChip>
-        ))}
-      </Row>
-
-      <Row label={t.budgetLabel}>
-        {BUDGET_TIERS.map(b => (
-          <FilterChip key={b} active={budget === b} onClick={() => setBudget(budget === b ? null : b)}>
-            {b}
-          </FilterChip>
-        ))}
-      </Row>
-
+      {/* Removable active-chip row, mirrors the previous design. */}
       {hasActiveFilters && (
-        <div className="flex items-center gap-2 flex-wrap pt-4 border-t border-slate-50">
+        <div className="flex items-center gap-2 flex-wrap pt-5 mt-5 border-t border-slate-50">
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">{t.activeLabel}</span>
-          {personality !== 'All' && (
-            <ActiveChip label={personality} onRemove={() => setPersonality('All')} />
-          )}
-          {moods.map(m => (
-            <ActiveChip key={m} label={m} onRemove={() => toggleMood(m)} />
-          ))}
-          {budget && <ActiveChip label={budget} onRemove={() => setBudget(null)} />}
+          {personalities.map((p: string) => <ActiveChip key={p} label={p} onRemove={() => togglePersonality(p)} />)}
+          {moods.map((m: string)            => <ActiveChip key={m} label={m} onRemove={() => toggleMood(m)} />)}
+          {travelers.map((tv: string)       => <ActiveChip key={tv} label={tv} onRemove={() => toggleTraveler(tv)} />)}
         </div>
       )}
     </div>
@@ -846,6 +899,79 @@ function LiveResultCard({ title, tagline, image, rating, onClick }: any) {
         <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 truncate mt-0.5">{tagline}</p>
       </div>
     </motion.div>
+  );
+}
+
+// Compact city-page navbar search with the same live-result dropdown logic
+// used by the homepage hero. Renders only on city pages (gated by the
+// caller). Closes on outside click; clicking a result navigates directly.
+function NavSearch({ query, setQuery, onCityClick }: any) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const results = useMemo(() => query.trim() ? liveSearch(query) : [], [query]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const go = (id: string) => {
+    setQuery('');
+    setOpen(false);
+    onCityClick(id);
+  };
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <div className="relative w-[240px]">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+        <input
+          type="text"
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder={SITE_TEXT.nav.citySearchPlaceholder}
+          className="w-full h-10 bg-slate-900/70 border border-slate-800 rounded-xl pl-9 pr-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand transition-colors"
+        />
+      </div>
+      <AnimatePresence>
+        {open && query.trim() && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            className="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl shadow-slate-950/40 border border-slate-100 overflow-hidden z-[60] max-h-80 overflow-y-auto"
+          >
+            {results.length > 0 ? (
+              results.slice(0, 8).map(c => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => go(c.id)}
+                  className="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-b-0"
+                >
+                  <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
+                    <img src={c.image} alt={c.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] font-black uppercase tracking-tight text-slate-900 truncate">{c.name}</div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400 truncate">{c.tagline}</div>
+                  </div>
+                  <span className="text-[9px] font-black text-brand shrink-0">{c.rating}</span>
+                </button>
+              ))
+            ) : (
+              <div className="px-3 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-300 text-center">
+                {SITE_TEXT.filterBar.noLiveMatches}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -890,11 +1016,15 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column */}
-        <div className="lg:col-span-4 order-1 lg:order-1 space-y-8">
+        {/* Mobile: `contents` flattens this wrapper so each card becomes a
+            direct grid item of the outer grid and its individual `order-*`
+            class controls its mobile slot. Desktop: `lg:block` restores the
+            wrapper as the left column. */}
+        <div className="contents lg:block lg:col-span-4 lg:space-y-8">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="relative group rounded-[3rem] overflow-hidden aspect-[4/5] lg:aspect-[1/1] shadow-2xl shadow-slate-300"
+            className="order-1 relative group rounded-[3rem] overflow-hidden aspect-[4/5] lg:aspect-[1/1] shadow-2xl shadow-slate-300"
           >
             <img src={city.heroImage} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700" alt={city.name} />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent"></div>
@@ -909,7 +1039,7 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
             </div>
           </motion.div>
 
-          <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
+          <div className="order-4 bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-8 border-b border-slate-50 pb-4">{t.gettingThere}</h4>
             <div className="space-y-4">
               {city.reach.map((r, i) => (
@@ -929,7 +1059,7 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
             </div>
           </div>
 
-          <div className="bg-emerald-50/20 rounded-[2.5rem] p-8 border border-emerald-100">
+          <div className="order-5 bg-emerald-50/20 rounded-[2.5rem] p-8 border border-emerald-100">
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 mb-6 flex items-center gap-3">
               <AlertCircle size={16} />
               {t.survivalHeading}
@@ -943,39 +1073,14 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
               ))}
             </div>
           </div>
-
-          {/* Blueprint Budget — relocated out of the old full-width strip
-              into the dead space below Survival for better visual balance.
-              Compact card; same branding/labels; values now in INR. */}
-          <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
-            <div className="flex items-center gap-4 mb-6 border-b border-slate-50 pb-5">
-              <div className="w-11 h-11 bg-slate-950 rounded-2xl flex items-center justify-center text-brand shrink-0">
-                <Utensils size={18} />
-              </div>
-              <div>
-                <h4 className="text-[13px] font-black tracking-tight uppercase text-slate-900">{t.budgetTitle}</h4>
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5">{t.budgetSubPrefix}{city.name}</p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t.backpacker}</span>
-                <span className="text-sm font-black text-slate-900">{city.budget.backpacker}</span>
-              </div>
-              <div className="flex items-center justify-between bg-brand rounded-2xl px-5 py-4 shadow-lg shadow-brand/20">
-                <span className="text-[9px] font-black text-slate-950/70 uppercase tracking-widest">{t.optimum}</span>
-                <span className="text-base font-black text-slate-950">{city.budget.recommended}</span>
-              </div>
-              <div className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t.luxury}</span>
-                <span className="text-sm font-black text-slate-900">{city.budget.luxury}</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Middle Column */}
-        <div className="lg:col-span-5 order-2 lg:order-2 bg-white rounded-[3.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden relative min-h-[800px]">
+        {/* Middle column. The visual card styling (bg/rounded/shadow/min-h)
+            was lifted into the inner div so the outer wrapper can be
+            `contents` on mobile without losing its background or rounding. */}
+        <div className="contents lg:block lg:col-span-5">
+          <div className="order-3 lg:order-none bg-white rounded-[3.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden relative lg:min-h-[800px]">
           <div className="p-10 border-b border-slate-50 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-md z-40">
             <div>
               <h3 className="text-xl font-black tracking-[0.2em] text-slate-900 uppercase">{t.timelineTitle}</h3>
@@ -1027,11 +1132,12 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
               })}
             </AnimatePresence>
           </div>
+          </div>
         </div>
 
         {/* Right Column */}
-        <div className="lg:col-span-3 order-3 space-y-8">
-          <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 text-center">
+        <div className="contents lg:block lg:col-span-3 lg:space-y-8">
+          <div className="order-2 bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 text-center">
             <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-8">{t.mintScoreTitle}</h4>
 
             <div className="relative w-full max-w-[230px] mx-auto">
@@ -1054,27 +1160,33 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
                   strokeDasharray={`${(Math.PI * 40 * city.rating / 10).toFixed(2)} ${(Math.PI * 40).toFixed(2)}`}
                   style={{ transition: 'stroke-dasharray 1.2s ease-out' }}
                 />
-                {/* Sharp needle. Tip at radius 37 from the pivot — it reaches the
-                    coloured band but never crosses past the semicircle. */}
+                {/* Single connected needle anchored exactly at the pivot
+                    centre (50,50). Tip at radius 36 from the pivot — sits
+                    at the inner edge of the coloured band; never crosses
+                    past the outer semicircle. */}
                 <motion.polygon
-                  points="50,13 47.2,50.5 52.8,50.5"
+                  points="50,14 47.5,50 52.5,50"
                   fill="#0F172A"
                   initial={{ rotate: -90 }}
                   animate={{ rotate: -90 + (city.rating / 10 * 180) }}
                   transition={{ duration: 1.4, type: 'spring', bounce: 0.22 }}
                   style={{ originX: '50px', originY: '50px' }}
                 />
-                <circle cx="50" cy="50" r="5.5" fill="#0F172A" />
-                <circle cx="50" cy="50" r="2" fill="#FFFFFF" />
+                {/* Clean circular pivot cap: solid black with a tiny white
+                    centre, sitting on top of the needle base. */}
+                <circle cx="50" cy="50" r="5" fill="#0F172A" />
+                <circle cx="50" cy="50" r="1.5" fill="#FFFFFF" />
               </svg>
-              <div className="text-4xl font-black text-slate-950 tracking-tighter leading-none -mt-2">
+              {/* Slightly lower and slightly smaller numeric score so the
+                  pivot has visible breathing room above it. */}
+              <div className="text-3xl font-black text-slate-950 tracking-tighter leading-none mt-2">
                 {Math.round(city.rating * 10)}
               </div>
             </div>
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-4 leading-tight">{t.mintScoreFooter}</p>
           </div>
 
-          <div className="bg-slate-950 rounded-[3rem] p-10 shadow-2xl shadow-slate-950/40 text-white overflow-hidden">
+          <div className="order-7 bg-slate-950 rounded-[3rem] p-10 shadow-2xl shadow-slate-950/40 text-white overflow-hidden">
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-8">{t.matrixTitle}</h4>
             <div className="space-y-10">
               <MatrixVisual label={t.effortLabel} value={combinedEffort} level={combinedEffort > 70 ? t.effortLevelHigh : t.effortLevelMid} color="bg-orange-500" />
@@ -1082,7 +1194,7 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
             </div>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden flex">
+          <div className="order-6 bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden flex">
             <div className="flex-1 glass-green p-8 border-r border-slate-50">
               <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600 bg-white/80 px-2 py-0.5 rounded-md border border-emerald-500/10 mb-6 inline-block">{t.prosLabel}</span>
               <div className="space-y-5 mt-4">
@@ -1103,6 +1215,35 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
                     {c}
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Blueprint Budget — repositioned to the right column to mirror
+              the Survival card on the left, filling the previously empty
+              area opposite. Card visuals, values and INR data unchanged. */}
+          <div className="order-8 bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-4 mb-6 border-b border-slate-50 pb-5">
+              <div className="w-11 h-11 bg-slate-950 rounded-2xl flex items-center justify-center text-brand shrink-0">
+                <Utensils size={18} />
+              </div>
+              <div>
+                <h4 className="text-[13px] font-black tracking-tight uppercase text-slate-900">{t.budgetTitle}</h4>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5">{t.budgetSubPrefix}{city.name}</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t.backpacker}</span>
+                <span className="text-sm font-black text-slate-900">{city.budget.backpacker}</span>
+              </div>
+              <div className="flex items-center justify-between bg-brand rounded-2xl px-5 py-4 shadow-lg shadow-brand/20">
+                <span className="text-[9px] font-black text-slate-950/70 uppercase tracking-widest">{t.optimum}</span>
+                <span className="text-base font-black text-slate-950">{city.budget.recommended}</span>
+              </div>
+              <div className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t.luxury}</span>
+                <span className="text-sm font-black text-slate-900">{city.budget.luxury}</span>
               </div>
             </div>
           </div>

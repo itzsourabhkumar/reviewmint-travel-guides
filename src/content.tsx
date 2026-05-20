@@ -83,6 +83,10 @@ export const MOODS = [
 
 export const BUDGET_TIERS = ['Budget', 'Mid-range', 'Premium'] as const;
 
+// Who the city suits — independent of the personality taxonomy. Used by
+// the new Traveler Type filter dropdown on the homepage.
+export const TRAVELER_TYPES = ['Solo', 'Couples', 'Friends', 'Family'] as const;
+
 export const SORT_OPTIONS = [
   { id: 'relevance',  label: 'Relevance' },
   { id: 'score-desc', label: 'Mint Score: High → Low' },
@@ -209,10 +213,12 @@ export const SITE_TEXT = {
   },
 
   nav: {
+    home:          'Home',
     destinations:  'Destinations',
     personaGuides: 'Persona Guides',
     about:         'About',
-    login:         'LOGIN'
+    login:         'LOGIN',
+    citySearchPlaceholder: 'Search cities…'
   },
 
   hero: {
@@ -238,10 +244,11 @@ export const SITE_TEXT = {
   },
 
   filterBar: {
+    allLabel:         'All',
     sortLabel:        'Sort By',
     personalityLabel: 'Personality',
     moodLabel:        'Travel Type',
-    budgetLabel:      'Budget',
+    travelerLabel:    'Traveler Type',
     clearFilters:     'Clear Filters',
     activeLabel:      'Active',
     results:          (n: number) => `${n} ${n === 1 ? 'city' : 'cities'}`,
