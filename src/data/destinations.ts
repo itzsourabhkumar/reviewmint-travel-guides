@@ -38,6 +38,9 @@ export interface DestinationSummary {
   personalities: string[];
   // Travel-type / mood tags surfaced in the homepage filter bar.
   moods: string[];
+  // Suitability tags (Solo / Couples / Friends / Family) — drives the
+  // homepage Traveler Type filter dropdown. Independent of personality.
+  travelerType: string[];
   // Numeric Mint Score (0–10) for sort-by-score. Mirrors `rating` parsed.
   score: number;
   // Coarse spend bucket derived from the recommended daily budget.
@@ -1644,6 +1647,126 @@ export const DESTINATIONS: Record<string, Destination> = {
 
 import { liteCitiesAsSummary } from './cityDirectory';
 
+// City-specific hero images for the 43 promoted cities. Sourced from
+// Wikipedia/Wikimedia Commons (stable CDN-backed URLs of each city's most
+// iconic landmark). The 7 verified originals keep their own heroImage URLs
+// declared inline above and are intentionally absent here.
+//
+// Applied via a post-process pass below that swaps Destination.heroImage
+// at module init, so both the city detail page and the homepage card
+// pick up the unique image automatically.
+export const CITY_HERO_OVERRIDES: Record<string, string> = {
+  ahmedabad:    "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/GANDHI_ASHRAM_03.jpg/3840px-GANDHI_ASHRAM_03.jpg",
+  ajmer:        "https://upload.wikimedia.org/wikipedia/commons/6/6d/Dargah_of_Sufi_saint_Moinuddin_Chishti_Ajmer_India_%285%29.JPG",
+  amritsar:     "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/The_Golden_Temple_of_Amrithsar_7.jpg/3840px-The_Golden_Temple_of_Amrithsar_7.jpg",
+  bangalore:    "https://upload.wikimedia.org/wikipedia/commons/2/25/Vidhana_Soudha_2012.jpg",
+  bhopal:       "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Taj-ul-Masjid%2C_Bhopal%2C_India.jpg/3840px-Taj-ul-Masjid%2C_Bhopal%2C_India.jpg",
+  chandigarh:   "https://upload.wikimedia.org/wikipedia/commons/c/c2/Chandigarh_Rock_Garden_4.jpg",
+  coorg:        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Abbey_Falls_New.jpg/3840px-Abbey_Falls_New.jpg",
+  darjeeling:   "https://upload.wikimedia.org/wikipedia/commons/9/96/DarjeelingTrainFruitshop_%282%29.jpg",
+  dehradun:     "https://upload.wikimedia.org/wikipedia/commons/e/e2/Dehradun_view_from_maggi_point.jpg",
+  dharamshala:  "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Dharamshala_03_%28Cropped%29.jpg/3840px-Dharamshala_03_%28Cropped%29.jpg",
+  dwarka:       "https://upload.wikimedia.org/wikipedia/commons/0/0c/Dwarakadheesh_Temple%2C_2014.jpg",
+  gangtok:      "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Tsongmo_Lake_or_Changu_Lake_-_East_Sikkim.jpg/3840px-Tsongmo_Lake_or_Changu_Lake_-_East_Sikkim.jpg",
+  gwalior:      "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Gwalior_Fort_front.jpg/3840px-Gwalior_Fort_front.jpg",
+  hampi:        "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Complex_of_Virupaksha_Temple%2C_Hampi_%2804%29.jpg/3840px-Complex_of_Virupaksha_Temple%2C_Hampi_%2804%29.jpg",
+  haridwar:     "https://upload.wikimedia.org/wikipedia/commons/0/0f/Evening_view_of_Har-ki-Pauri%2C_Haridwar.jpg",
+  hyderabad:    "https://upload.wikimedia.org/wikipedia/commons/7/71/Charminar_Hyderabad_1.jpg",
+  indore:       "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Indore_Rajwada01.jpg/3840px-Indore_Rajwada01.jpg",
+  jhansi:       "https://upload.wikimedia.org/wikipedia/commons/e/e8/Jhansi_Fort.jpg",
+  jodhpur:      "https://upload.wikimedia.org/wikipedia/commons/9/99/Mehrangarh_Fort_sanhita.jpg",
+  kasol:        "https://upload.wikimedia.org/wikipedia/commons/a/a2/Kasol_mountain_view.jpg",
+  kolkata:      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Victoria_Memorial_situated_in_Kolkata.jpg/3840px-Victoria_Memorial_situated_in_Kolkata.jpg",
+  lucknow:      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Rumi_Darwaza_-_DSC2797-01.jpg/3840px-Rumi_Darwaza_-_DSC2797-01.jpg",
+  manali:       "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Solang_Valley_%2CManali%2C_Himachal_Pardes%2C_India.JPG/3840px-Solang_Valley_%2CManali%2C_Himachal_Pardes%2C_India.JPG",
+  mathura:      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Mathura_Temple-Mathura-India0002.JPG/3840px-Mathura_Temple-Mathura-India0002.JPG",
+  "mcleod-ganj": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/McLeod_Ganj_Dharamkot_Dharmsala_Himachal_Pradesh_India_April_2014.jpg/3840px-McLeod_Ganj_Dharamkot_Dharmsala_Himachal_Pradesh_India_April_2014.jpg",
+  "mount-abu":  "https://upload.wikimedia.org/wikipedia/commons/8/81/Delwada.jpg",
+  mumbai:       "https://upload.wikimedia.org/wikipedia/commons/3/3a/Mumbai_03-2016_30_Gateway_of_India.jpg",
+  munnar:       "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Munnar_Overview.jpg/3840px-Munnar_Overview.jpg",
+  mussoorie:    "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Kempty_Waterfalls.jpg/3840px-Kempty_Waterfalls.jpg",
+  mysuru:       "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Mysore_Palace_Morning.jpg/3840px-Mysore_Palace_Morning.jpg",
+  nainital:     "https://upload.wikimedia.org/wikipedia/commons/2/28/The_Boat_and_The_Lake.jpg",
+  ooty:         "https://upload.wikimedia.org/wikipedia/commons/4/41/NMR_train_at_Ketti_05-02-26_75.jpeg",
+  orchha:       "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Chaturbhuj_Temple%2C_Orchha.jpg/3840px-Chaturbhuj_Temple%2C_Orchha.jpg",
+  patna:        "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Golghar_%E0%A5%AA.jpg/3840px-Golghar_%E0%A5%AA.jpg",
+  pondicherry:  "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Pondicherry-Rock_beach_aerial_view.jpg/3840px-Pondicherry-Rock_beach_aerial_view.jpg",
+  pune:         "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Front_view_of_Shaniwar_Wada_illuminated.jpg/3840px-Front_view_of_Shaniwar_Wada_illuminated.jpg",
+  pushkar:      "https://upload.wikimedia.org/wikipedia/commons/c/c3/Evening_lights_by_the_Pushkar_Lake%2C_Pushkar.jpg",
+  rameswaram:   "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Ramanathaswamy_temple7.JPG/1920px-Ramanathaswamy_temple7.JPG",
+  shillong:     "https://upload.wikimedia.org/wikipedia/commons/6/6a/Umiam_Lake_-_by_Vikramjit_Kakati.png",
+  somnath:      "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Somanath_mandir_%28cropped%29.jpg/3840px-Somanath_mandir_%28cropped%29.jpg",
+  surat:        "https://upload.wikimedia.org/wikipedia/commons/8/8e/Dumasbeach1.jpg",
+  tirupati:     "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Tirumala_090615.jpg/3840px-Tirumala_090615.jpg",
+  vrindavan:    "https://upload.wikimedia.org/wikipedia/commons/8/8e/PremMandirSideViewFromCanteen.jpg",
+};
+
+// Apply the per-city overrides at module init. The 7 verified originals
+// are not listed in CITY_HERO_OVERRIDES, so their heroImage stays as
+// declared in their literal above.
+for (const id of Object.keys(CITY_HERO_OVERRIDES)) {
+  const d = DESTINATIONS[id];
+  if (d) d.heroImage = CITY_HERO_OVERRIDES[id];
+}
+
+// Traveler-suitability tags per city. Kept as a side-table (rather than
+// embedded in each Destination literal above) so the catalogue stays
+// scannable and the mapping can be tuned without touching the cities.
+export const TRAVELER_TYPES_BY_ID: Record<string, string[]> = {
+  // Verified originals
+  agra:        ['Couples', 'Family'],
+  varanasi:    ['Solo', 'Family'],
+  jaipur:      ['Family', 'Couples'],
+  delhi:       ['Family', 'Friends'],
+  udaipur:     ['Couples', 'Family', 'Friends'],
+  rishikesh:   ['Solo', 'Friends'],
+  goa:         ['Friends', 'Couples', 'Solo'],
+  // Promoted from the lite directory
+  ahmedabad:   ['Friends', 'Family'],
+  ajmer:       ['Couples', 'Family'],
+  amritsar:    ['Family'],
+  bangalore:   ['Friends'],
+  bhopal:      ['Family'],
+  chandigarh:  ['Friends', 'Family'],
+  coorg:       ['Couples', 'Family'],
+  darjeeling:  ['Couples', 'Family'],
+  dehradun:    ['Solo', 'Family'],
+  dharamshala: ['Solo'],
+  dwarka:      ['Couples', 'Family'],
+  gangtok:     ['Solo', 'Couples'],
+  gwalior:     ['Solo', 'Family'],
+  hampi:       ['Solo', 'Friends'],
+  haridwar:    ['Solo', 'Family'],
+  hyderabad:   ['Friends', 'Family'],
+  indore:      ['Friends'],
+  jhansi:      ['Solo', 'Family'],
+  jodhpur:     ['Couples', 'Friends'],
+  kasol:       ['Solo', 'Friends'],
+  kolkata:     ['Family'],
+  lucknow:     ['Solo', 'Family'],
+  manali:      ['Couples', 'Friends'],
+  mathura:     ['Family'],
+  'mcleod-ganj': ['Solo'],
+  'mount-abu': ['Couples', 'Family'],
+  mumbai:      ['Friends'],
+  munnar:      ['Couples'],
+  mussoorie:   ['Couples', 'Friends'],
+  mysuru:      ['Couples', 'Family'],
+  nainital:    ['Couples', 'Family'],
+  ooty:        ['Couples', 'Family'],
+  orchha:      ['Solo', 'Couples'],
+  patna:       ['Solo', 'Family'],
+  pondicherry: ['Solo', 'Couples'],
+  pune:        ['Solo', 'Friends'],
+  pushkar:     ['Solo', 'Couples'],
+  rameswaram:  ['Family'],
+  shillong:    ['Couples', 'Friends'],
+  somnath:     ['Family'],
+  surat:       ['Friends'],
+  tirupati:    ['Family'],
+  vrindavan:   ['Couples', 'Family'],
+};
+
 // Parse the numeric rupee amount out of a budget string like "₹4,500/day".
 function rupeesOf(s: string): number {
   const digits = s.replace(/[^0-9]/g, '');
@@ -1668,6 +1791,7 @@ export const DESTINATION_LIST: DestinationSummary[] = Object.values(DESTINATIONS
   rating: d.rating.toFixed(1),
   personalities: Array.from(new Set(d.itinerary.flatMap(it => it.personalities))),
   moods: d.moods ?? [],
+  travelerType: TRAVELER_TYPES_BY_ID[d.id] ?? [],
   score: d.rating,
   budgetTier: budgetTierOf(d.budget.recommended),
   order: i,
