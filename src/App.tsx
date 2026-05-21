@@ -185,7 +185,7 @@ export default function App() {
             className="flex items-center gap-3 cursor-pointer group"
             onClick={() => navigate({ kind: 'home' })}
           >
-            <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-brand/20 group-hover:bg-white transition-all">{SITE_TEXT.brand.mark}</div>
+            <Logo size="md" />
             <span className="font-display text-2xl font-black text-white tracking-tighter">{SITE_TEXT.brand.name}<span className="text-brand">{SITE_TEXT.brand.nameAccent}</span></span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-400">
@@ -310,7 +310,7 @@ export default function App() {
                   className="flex items-center gap-2 cursor-pointer"
                   onClick={() => navigate({ kind: 'home' })}
                 >
-                  <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center text-slate-950 font-black text-sm">{SITE_TEXT.brand.mark}</div>
+                  <Logo size="sm" />
                   <span className="font-display text-xl font-bold text-white tracking-tight">{SITE_TEXT.brand.name}{SITE_TEXT.brand.nameAccent}</span>
                 </div>
                 <p className="text-sm leading-relaxed opacity-60">{SITE_TEXT.footer.brandBlurb}</p>
@@ -411,6 +411,32 @@ export default function App() {
 
 // --- Reusable link components ---
 
+// Centralised brand mark. Renders the REVIEWMINT logo PNG (served from
+// /public via Vite's BASE_URL so it works on both the dev server and the
+// GitHub Pages deployment).
+//
+// The PNG ships with its own black background, which would otherwise
+// blend into the dark slate-950 navbar/footer and lose all definition.
+// To preserve the mint-green brand presence the old text-tile gave us,
+// we wrap the image in a thin brand-coloured ring (plus a soft brand
+// shadow on the md variant) so the logo tile stays visually distinct
+// against any dark surface.
+function Logo({ size = 'md' }: { size?: 'sm' | 'md' }) {
+  const dim = size === 'sm'
+    ? 'w-8 h-8 rounded-lg ring-1 ring-brand/70'
+    : 'w-10 h-10 rounded-xl ring-2 ring-brand shadow-lg shadow-brand/30';
+  return (
+    <div className={`${dim} overflow-hidden bg-slate-950 shrink-0`}>
+      <img
+        src={`${import.meta.env.BASE_URL}logo.png`}
+        alt={`${SITE_TEXT.brand.name}${SITE_TEXT.brand.nameAccent} logo`}
+        className="w-full h-full object-cover"
+        draggable={false}
+      />
+    </div>
+  );
+}
+
 function NavLink({ children, onClick, active }: { children: React.ReactNode; onClick: () => void; active?: boolean }) {
   return (
     <a
@@ -494,7 +520,7 @@ function MobileMenu({ view, onClose, onNavigate, onLogin }: any) {
       >
         <div className="flex items-center justify-between p-6 border-b border-slate-900">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center text-slate-950 font-black text-sm">{SITE_TEXT.brand.mark}</div>
+            <Logo size="sm" />
             <span className="font-display text-lg font-black text-white tracking-tighter">{SITE_TEXT.brand.name}<span className="text-brand">{SITE_TEXT.brand.nameAccent}</span></span>
           </div>
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-white" aria-label="Close menu">
@@ -553,7 +579,7 @@ function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (e
       >
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center text-slate-950 font-black text-xl">{SITE_TEXT.brand.mark}</div>
+            <Logo size="md" />
             <span className="font-display text-xl font-black text-white tracking-tighter">{SITE_TEXT.loginModal.title}</span>
           </div>
           <button
@@ -1337,21 +1363,24 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
                   strokeDasharray={`${(Math.PI * 40 * city.rating / 10).toFixed(2)} ${(Math.PI * 40).toFixed(2)}`}
                   style={{ transition: 'stroke-dasharray 1.2s ease-out' }}
                 />
-                {/* Slimmer needle — the desired-meter screenshot shows a long,
-                    tapered shaft that visibly exits the pivot cap. Base width
-                    cut from 5 to 3 units, tip extended one unit further out. */}
+                {/* Long, slim needle matching the new.jpg reference: tip
+                    extended to y=11 (radius 39, almost touching the inner
+                    edge of the coloured band) and base widened slightly
+                    (2 units half-width) so the shaft visibly tapers as it
+                    exits the pivot cap. */}
                 <motion.polygon
-                  points="50,12 48.5,50 51.5,50"
+                  points="50,11 48,50 52,50"
                   fill="#0F172A"
                   initial={{ rotate: -90 }}
                   animate={{ rotate: -90 + (city.rating / 10 * 180) }}
                   transition={{ duration: 1.4, type: 'spring', bounce: 0.22 }}
                   style={{ originX: '50px', originY: '50px' }}
                 />
-                {/* Clean circular pivot cap: solid black with a tiny white
-                    centre, sitting on top of the needle base. */}
+                {/* Clock-hub pivot cap: solid black with a larger white
+                    inner dot (r=2) per new.jpg — gives the meter a more
+                    speedometer-like, mechanical feel. */}
                 <circle cx="50" cy="50" r="5" fill="#0F172A" />
-                <circle cx="50" cy="50" r="1.5" fill="#FFFFFF" />
+                <circle cx="50" cy="50" r="2" fill="#FFFFFF" />
               </svg>
               {/* Slightly lower and slightly smaller numeric score so the
                   pivot has visible breathing room above it. */}
