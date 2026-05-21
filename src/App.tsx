@@ -1363,18 +1363,23 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
                   strokeDasharray={`${(Math.PI * 40 * city.rating / 10).toFixed(2)} ${(Math.PI * 40).toFixed(2)}`}
                   style={{ transition: 'stroke-dasharray 1.2s ease-out' }}
                 />
-                {/* Long, slim needle matching the new.jpg reference: tip
-                    extended to y=11 (radius 39, almost touching the inner
-                    edge of the coloured band) and base widened slightly
-                    (2 units half-width) so the shaft visibly tapers as it
-                    exits the pivot cap. */}
-                <motion.polygon
-                  points="50,11 48,50 52,50"
+                {/* Needle. Rendered as a plain <polygon> driven by a pure
+                    CSS @keyframes animation (.gauge-needle in index.css)
+                    rather than Framer Motion: the JS animator was
+                    overriding our `transform-box: view-box` setting,
+                    sending the rotation origin back to the polygon's
+                    bounding box and reproducing the old.jpg bug at the
+                    animation's end frame.
+                    `key={city.id}` forces a remount on every city
+                    change so the sweep plays fresh each time. */}
+                <polygon
+                  key={city.id}
+                  className="gauge-needle"
+                  points="50,11 48.5,50 51.5,50"
                   fill="#0F172A"
-                  initial={{ rotate: -90 }}
-                  animate={{ rotate: -90 + (city.rating / 10 * 180) }}
-                  transition={{ duration: 1.4, type: 'spring', bounce: 0.22 }}
-                  style={{ originX: '50px', originY: '50px' }}
+                  style={{
+                    ['--needle-angle' as string]: `${-90 + (city.rating / 10 * 180)}deg`,
+                  } as React.CSSProperties}
                 />
                 {/* Clock-hub pivot cap: solid black with a larger white
                     inner dot (r=2) per new.jpg — gives the meter a more

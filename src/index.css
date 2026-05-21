@@ -37,6 +37,27 @@
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
 }
 
+/* Gauge needle: sweep from the left (0 score, rotate -90deg) to the
+   city's final angle on mount/remount. We use a plain CSS @keyframes
+   animation rather than a JS animation library so the `transform-box:
+   view-box` setting is honoured — without it, browsers resolve
+   `transform-origin: 50px 50px` against the polygon's own bounding box
+   and the needle ends up orbiting a point outside itself (the bug
+   shown in old.jpg). The final angle is passed in per-instance via
+   the `--needle-angle` custom property. */
+@keyframes gauge-needle-sweep {
+  from { transform: rotate(-90deg); }
+  to   { transform: rotate(var(--needle-angle, 0deg)); }
+}
+.gauge-needle {
+  transform-origin: 50px 50px;
+  transform-box: view-box;
+  /* Set the final resting transform so the polygon stays at the
+     correct angle once the animation finishes. */
+  transform: rotate(var(--needle-angle, 0deg));
+  animation: gauge-needle-sweep 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
