@@ -243,6 +243,10 @@ export const SITE_TEXT = {
     blueprintCta: 'Blueprint'
   },
 
+  backToTop: {
+    ariaLabel: 'Back to top'
+  },
+
   filterBar: {
     allLabel:         'All',
     sortLabel:        'Sort By',
@@ -257,6 +261,7 @@ export const SITE_TEXT = {
   },
 
   cityDetail: {
+    backButton:       'Back',
     verifiedBadge:    'Verified Guide',
     oneDayInPrefix:   'One Day',          // followed by line break + "in {City}"
     oneDayInLink:     'in',
@@ -273,8 +278,8 @@ export const SITE_TEXT = {
     effortLevelMid:   'MID',
     payoffLabel:      'Visual / Soul Payoff',
     payoffLevel:      'ELITE',
-    prosLabel:        'Pros',
-    consLabel:        'Cons',
+    prosLabel:        'Why to go',
+    consLabel:        'Why to skip',
     budgetTitle:      'Blueprint Budget',
     budgetSubPrefix:  'Daily Spend in ',     // + city name
     backpacker:       'Backpacker',
