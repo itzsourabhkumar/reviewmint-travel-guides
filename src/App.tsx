@@ -18,12 +18,15 @@ import {
   Utensils,
   AlertCircle,
   ArrowRight,
+  ArrowLeft,
+  ArrowUp,
   TrendingUp,
   Check,
   X,
   ChevronDown,
   SlidersHorizontal,
-  RotateCcw
+  RotateCcw,
+  Menu
 } from 'lucide-react';
 import {
   SITE_TEXT,
@@ -108,6 +111,7 @@ export default function App() {
   const [activePersonality, setActivePersonality] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [loginOpen, setLoginOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const heroSearchRef = useRef<HTMLInputElement>(null);
 
@@ -204,13 +208,26 @@ export default function App() {
               {SITE_TEXT.nav.login}
             </button>
           </div>
-          <button
-            className="md:hidden text-white"
-            onClick={focusHeroSearch}
-            aria-label="Search"
-          >
-            <Search size={24} />
-          </button>
+          {/* Mobile-only nav controls: search icon (jumps to hero search)
+              and a hamburger that opens the off-canvas nav drawer. */}
+          <div className="md:hidden flex items-center gap-4">
+            <button
+              type="button"
+              onClick={focusHeroSearch}
+              aria-label="Search"
+              className="text-white hover:text-brand transition-colors"
+            >
+              <Search size={24} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open menu"
+              className="text-white hover:text-brand transition-colors"
+            >
+              <Menu size={26} />
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -264,38 +281,59 @@ export default function App() {
         )}
       </main>
 
+      {/* Back-to-top action — sits in-flow just before the footer (per the
+          changes.docx note) rather than as a floating widget. Smooth-scrolls
+          the page to the very top. */}
+      <div className="w-full flex justify-center py-10 bg-surface-bg">
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label={SITE_TEXT.backToTop.ariaLabel}
+          className="w-12 h-12 rounded-full bg-brand text-slate-950 flex items-center justify-center shadow-lg shadow-brand/30 hover:bg-white transition-colors"
+        >
+          <ArrowUp size={20} strokeWidth={3} />
+        </button>
+      </div>
+
       {/* Footer */}
       <footer className="bg-slate-950 text-slate-400 pt-20 pb-10 border-t border-slate-900">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-            <div className="space-y-6">
-              <div
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => navigate({ kind: 'home' })}
-              >
-                <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center text-slate-950 font-black text-sm">{SITE_TEXT.brand.mark}</div>
-                <span className="font-display text-xl font-bold text-white tracking-tight">{SITE_TEXT.brand.name}{SITE_TEXT.brand.nameAccent}</span>
+          {/* Footer is a 3-column grid on md+. Brand + Community now share
+              column 1 (Community moved up out of column 3) so the empty
+              area below the short brand blurb is filled. Platform stays in
+              column 2 and Newsletter in column 3. On mobile everything
+              stacks single-column with the same gap. */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
+            <div className="space-y-10">
+              <div className="space-y-6">
+                <div
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => navigate({ kind: 'home' })}
+                >
+                  <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center text-slate-950 font-black text-sm">{SITE_TEXT.brand.mark}</div>
+                  <span className="font-display text-xl font-bold text-white tracking-tight">{SITE_TEXT.brand.name}{SITE_TEXT.brand.nameAccent}</span>
+                </div>
+                <p className="text-sm leading-relaxed opacity-60">{SITE_TEXT.footer.brandBlurb}</p>
               </div>
-              <p className="text-sm leading-relaxed opacity-60">{SITE_TEXT.footer.brandBlurb}</p>
+
+              <div>
+                <h4 className="text-white font-bold mb-6 text-sm uppercase tracking-widest">{SITE_TEXT.footer.communityHeading}</h4>
+                <ul className="space-y-4 text-xs font-bold">
+                  {SITE_TEXT.footer.communityLinks.map(link => (
+                    <li key={link.label}>
+                      <FooterLink onClick={() => navigate(link.view === 'info' ? { kind: 'info', topic: link.topic } : { kind: link.view })}>
+                        {link.label}
+                      </FooterLink>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             <div>
               <h4 className="text-white font-bold mb-6 text-sm uppercase tracking-widest">{SITE_TEXT.footer.platformHeading}</h4>
               <ul className="space-y-4 text-xs font-bold">
                 {SITE_TEXT.footer.platformLinks.map(link => (
-                  <li key={link.label}>
-                    <FooterLink onClick={() => navigate(link.view === 'info' ? { kind: 'info', topic: link.topic } : { kind: link.view })}>
-                      {link.label}
-                    </FooterLink>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-white font-bold mb-6 text-sm uppercase tracking-widest">{SITE_TEXT.footer.communityHeading}</h4>
-              <ul className="space-y-4 text-xs font-bold">
-                {SITE_TEXT.footer.communityLinks.map(link => (
                   <li key={link.label}>
                     <FooterLink onClick={() => navigate(link.view === 'info' ? { kind: 'info', topic: link.topic } : { kind: link.view })}>
                       {link.label}
@@ -326,6 +364,19 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Mobile nav drawer — opens from the right via the hamburger button
+          in the navbar. Mirrors the desktop nav links plus Login. */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <MobileMenu
+            view={view}
+            onClose={() => setMobileMenuOpen(false)}
+            onNavigate={(v) => { setMobileMenuOpen(false); navigate(v); }}
+            onLogin={() => { setMobileMenuOpen(false); setLoginOpen(true); }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Login Modal */}
       <AnimatePresence>
@@ -412,6 +463,67 @@ function NewsletterForm({ onSubscribed, onInvalid }: { onSubscribed: (email: str
         {SITE_TEXT.footer.newsletterButton}
       </button>
     </div>
+  );
+}
+
+// Off-canvas mobile navigation drawer. Slides in from the right; backdrop
+// click and the X button both close it. Active link mirrors the desktop
+// navbar's active styling for consistency.
+function MobileMenu({ view, onClose, onNavigate, onLogin }: any) {
+  const items: { label: string; view: View; isActive: boolean }[] = [
+    { label: SITE_TEXT.nav.home,          view: { kind: 'home' },         isActive: view.kind === 'home' },
+    { label: SITE_TEXT.nav.destinations,  view: { kind: 'destinations' }, isActive: view.kind === 'destinations' },
+    { label: SITE_TEXT.nav.personaGuides, view: { kind: 'personas' },     isActive: view.kind === 'personas' },
+    { label: SITE_TEXT.nav.about,         view: { kind: 'about' },        isActive: view.kind === 'about' },
+  ];
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[65] bg-slate-950/70 backdrop-blur-md md:hidden"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'spring', damping: 28, stiffness: 240 }}
+        onClick={(e) => e.stopPropagation()}
+        className="absolute top-0 right-0 h-full w-72 max-w-[85vw] bg-slate-950 border-l border-slate-900 shadow-2xl flex flex-col"
+      >
+        <div className="flex items-center justify-between p-6 border-b border-slate-900">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center text-slate-950 font-black text-sm">{SITE_TEXT.brand.mark}</div>
+            <span className="font-display text-lg font-black text-white tracking-tighter">{SITE_TEXT.brand.name}<span className="text-brand">{SITE_TEXT.brand.nameAccent}</span></span>
+          </div>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-white" aria-label="Close menu">
+            <X size={20} />
+          </button>
+        </div>
+        <nav className="flex-1 px-4 py-6 flex flex-col gap-1">
+          {items.map(it => (
+            <button
+              key={it.label}
+              type="button"
+              onClick={() => onNavigate(it.view)}
+              className={`text-left px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-colors ${
+                it.isActive ? 'bg-brand/10 text-brand' : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+            >
+              {it.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={onLogin}
+            className="mt-4 w-full bg-brand text-slate-950 px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-white transition-colors"
+          >
+            {SITE_TEXT.nav.login}
+          </button>
+        </nav>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -520,6 +632,14 @@ function HomeView({
   const pageCount = Math.max(1, Math.ceil(filteredCities.length / HOME_PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
   const visibleCities = filteredCities.slice((safePage - 1) * HOME_PAGE_SIZE, safePage * HOME_PAGE_SIZE);
+
+  // Pagination should land the user on the first card of the new page,
+  // not leave them stranded at the bottom where the Prev/Next buttons sit.
+  const gridRef = useRef<HTMLDivElement>(null);
+  const goToPage = (p: number) => {
+    setPage(p);
+    gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const toggleIn = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (v: string) =>
     setter(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v]);
@@ -645,7 +765,7 @@ function HomeView({
           onClear={clearFilters}
         />
 
-        <div className="city-grid">
+        <div ref={gridRef} className="city-grid">
           {visibleCities.map(c => (
             <CityCard
               key={c.id}
@@ -664,7 +784,7 @@ function HomeView({
         )}
 
         {pageCount > 1 && (
-          <Pagination page={safePage} pageCount={pageCount} onChange={setPage} />
+          <Pagination page={safePage} pageCount={pageCount} onChange={goToPage} />
         )}
       </section>
     </motion.div>
@@ -802,18 +922,22 @@ function FilterBar({
         {groupBtn('mood',        t.moodLabel,        moods.length)}
         {groupBtn('traveler',    t.travelerLabel,    travelers.length)}
 
-        <div className="relative ml-auto">
+        {/* Sort dropdown. On mobile it sits inline with the group buttons
+            (no auto-margin) with tighter padding so it fits alongside the
+            Traveler Type chip on a single row. Desktop pushes it right
+            via ml-auto and keeps the fuller "Sort By: …" labels. */}
+        <div className="relative md:ml-auto">
           <select
             value={sortId}
             onChange={(e) => setSortId(e.target.value as SortId)}
-            className="appearance-none bg-slate-50 border border-slate-100 rounded-xl pl-4 pr-10 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-700 focus:outline-none focus:border-brand cursor-pointer hover:bg-slate-100 transition-colors"
+            className="appearance-none bg-slate-50 border border-slate-100 rounded-xl pl-3 pr-8 py-2 md:pl-4 md:pr-10 md:py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-700 focus:outline-none focus:border-brand cursor-pointer hover:bg-slate-100 transition-colors"
             aria-label={t.sortLabel}
           >
             {SORT_OPTIONS.map(o => (
-              <option key={o.id} value={o.id}>{t.sortLabel}: {o.label}</option>
+              <option key={o.id} value={o.id}>{o.label}</option>
             ))}
           </select>
-          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <ChevronDown size={14} className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
 
         {hasActiveFilters && (
@@ -1014,6 +1138,17 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
       animate={{ opacity: 1 }}
       className="max-w-[1440px] mx-auto px-4 py-8"
     >
+      {/* Back to the previous page. window.history.back() triggers the
+          existing popstate handler in <App>, so view state stays in sync
+          with the URL — works the same on mobile and desktop. */}
+      <button
+        type="button"
+        onClick={() => window.history.back()}
+        className="flex items-center gap-2 mb-6 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-100 hover:text-brand hover:border-brand shadow-sm transition-colors"
+      >
+        <ArrowLeft size={14} /> {SITE_TEXT.cityDetail.backButton}
+      </button>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column */}
         {/* Mobile: `contents` flattens this wrapper so each card becomes a
@@ -1076,17 +1211,23 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
         </div>
 
         {/* Middle Column */}
-        {/* Middle column. The visual card styling (bg/rounded/shadow/min-h)
-            was lifted into the inner div so the outer wrapper can be
-            `contents` on mobile without losing its background or rounding. */}
-        <div className="contents lg:block lg:col-span-5">
-          <div className="order-3 lg:order-none bg-white rounded-[3.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden relative lg:min-h-[800px]">
-          <div className="p-10 border-b border-slate-50 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-md z-40">
-            <div>
-              <h3 className="text-xl font-black tracking-[0.2em] text-slate-900 uppercase">{t.timelineTitle}</h3>
-              <p className="text-brand text-[10px] font-black mt-1 uppercase tracking-widest">{t.timelineSub}</p>
+        {/* Middle column. The visual card styling was lifted into the inner
+            div so the outer wrapper can be `contents` on mobile without
+            losing its background or rounding. On desktop the wrapper stacks
+            timeline + must-try with lg:space-y-8 so the middle column ends
+            near the same baseline as Survival (left) and Budget (right). */}
+        <div className="contents lg:block lg:col-span-5 lg:space-y-8">
+          <div className="order-3 lg:order-none bg-white rounded-[3.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden relative">
+          {/* Heading now sits above the quick-filter chips so "THE TIMELINE"
+              stays on a single line even on narrower lg widths. Chips moved
+              down into the row below — same buttons, same logic, just a
+              cleaner vertical stack instead of a cramped split row. */}
+          <div className="p-10 border-b border-slate-50 sticky top-0 bg-white/90 backdrop-blur-md z-40">
+            <div className="flex items-baseline justify-between gap-4">
+              <h3 className="text-xl font-black tracking-[0.2em] text-slate-900 uppercase whitespace-nowrap">{t.timelineTitle}</h3>
+              <p className="text-brand text-[10px] font-black uppercase tracking-widest whitespace-nowrap">{t.timelineSub}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mt-4 flex-wrap">
               {t.quickFilters.map(tag => (
                 <button key={tag} onClick={() => setActivePersonality(tag)} className={`px-4 py-2 text-[9px] font-black border border-slate-100 rounded-xl transition-all uppercase tracking-widest ${activePersonality === tag ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-400 hover:text-brand'}`}>{tag}</button>
               ))}
@@ -1122,10 +1263,20 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
                     <p className={`text-[13px] font-medium leading-relaxed max-w-sm mb-4 ${isMatch ? 'text-slate-500' : 'text-slate-200'}`}>
                       {item.description}
                     </p>
+                    {/* Show at most the 3 most relevant personality tags per
+                        stop. If a quick-filter (activePersonality) matches
+                        this stop, surface it first so it's always visible
+                        even if it'd otherwise be past the cap. */}
                     <div className="flex flex-wrap gap-2">
-                      {item.personalities.map(p => (
-                        <span key={p} className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-lg border transition-all ${isMatch && p === activePersonality ? 'bg-brand text-slate-950 border-brand' : 'bg-slate-50 text-slate-300 border-slate-100'}`}>{p}</span>
-                      ))}
+                      {(() => {
+                        const all = item.personalities;
+                        const ranked = activePersonality !== 'All' && all.includes(activePersonality)
+                          ? [activePersonality, ...all.filter(p => p !== activePersonality)]
+                          : all;
+                        return ranked.slice(0, 3).map(p => (
+                          <span key={p} className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-lg border transition-all ${isMatch && p === activePersonality ? 'bg-brand text-slate-950 border-brand' : 'bg-slate-50 text-slate-300 border-slate-100'}`}>{p}</span>
+                        ));
+                      })()}
                     </div>
                   </motion.div>
                 );
@@ -1133,14 +1284,40 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
             </AnimatePresence>
           </div>
           </div>
+
+          {/* Must-Try Bites — now lives inside the middle column below the
+              timeline, filling the previously-empty area between Survival
+              (left) and Budget (right). Same per-item card design as before
+              — only the dimensions/position changed per changes.docx. */}
+          {city.mustTry.length > 0 && (
+            <div className="order-9 lg:order-none">
+              <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 mb-6 px-2">{t.mustTryTitle}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {city.mustTry.map(item => (
+                  <div key={item.name} className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm flex gap-4 items-start">
+                    <div className="w-11 h-11 bg-brand/10 text-brand rounded-2xl flex items-center justify-center shrink-0">
+                      <Utensils size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black uppercase tracking-tight text-slate-900 mb-1">{item.name}</h4>
+                      <p className="text-[12px] text-slate-500 leading-relaxed">{item.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column */}
         <div className="contents lg:block lg:col-span-3 lg:space-y-8">
-          <div className="order-2 bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 text-center">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-8">{t.mintScoreTitle}</h4>
+          <div className="order-2 bg-white rounded-[2.5rem] px-6 py-8 shadow-sm border border-slate-100 text-center">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-4">{t.mintScoreTitle}</h4>
 
-            <div className="relative w-full max-w-[230px] mx-auto">
+            {/* Meter enlarged ~30% (230px → 300px) and card padding tightened
+                (p-10 → px-6 py-8) so the gauge fills the card efficiently
+                without ballooning the card's overall height. */}
+            <div className="relative w-full max-w-[300px] mx-auto">
               {/*
                 Semi-circular gauge. Geometry: centre (50,50), radius 40, so the
                 arc spans (10,50)→(90,50) over the top. Arc length = π·40.
@@ -1160,12 +1337,11 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
                   strokeDasharray={`${(Math.PI * 40 * city.rating / 10).toFixed(2)} ${(Math.PI * 40).toFixed(2)}`}
                   style={{ transition: 'stroke-dasharray 1.2s ease-out' }}
                 />
-                {/* Single connected needle anchored exactly at the pivot
-                    centre (50,50). Tip at radius 36 from the pivot — sits
-                    at the inner edge of the coloured band; never crosses
-                    past the outer semicircle. */}
+                {/* Slimmer needle — the desired-meter screenshot shows a long,
+                    tapered shaft that visibly exits the pivot cap. Base width
+                    cut from 5 to 3 units, tip extended one unit further out. */}
                 <motion.polygon
-                  points="50,14 47.5,50 52.5,50"
+                  points="50,12 48.5,50 51.5,50"
                   fill="#0F172A"
                   initial={{ rotate: -90 }}
                   animate={{ rotate: -90 + (city.rating / 10 * 180) }}
@@ -1250,25 +1426,6 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
         </div>
       </div>
 
-      {/* Must-Try Foods */}
-      {city.mustTry.length > 0 && (
-        <div className="mt-12 max-w-6xl mx-auto">
-          <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 mb-6 px-4">{t.mustTryTitle}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4">
-            {city.mustTry.map(item => (
-              <div key={item.name} className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm flex gap-5 items-start">
-                <div className="w-12 h-12 bg-brand/10 text-brand rounded-2xl flex items-center justify-center shrink-0">
-                  <Utensils size={20} />
-                </div>
-                <div>
-                  <h4 className="text-base font-black uppercase tracking-tight text-slate-900 mb-2">{item.name}</h4>
-                  <p className="text-[13px] text-slate-500 leading-relaxed">{item.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </motion.div>
   );
 }
@@ -1401,6 +1558,12 @@ function PersonaGuidesView({ onCityClick }: { onCityClick: (id: string) => void 
   const safePage = Math.min(page, pageCount);
   const visible = matches.slice((safePage - 1) * HOME_PAGE_SIZE, safePage * HOME_PAGE_SIZE);
 
+  const gridRef = useRef<HTMLDivElement>(null);
+  const goToPage = (p: number) => {
+    setPage(p);
+    gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pb-20">
       <PageHeader
@@ -1443,7 +1606,7 @@ function PersonaGuidesView({ onCityClick }: { onCityClick: (id: string) => void 
           </div>
         </div>
 
-        <div className="city-grid">
+        <div ref={gridRef} className="city-grid">
           {visible.map(c => (
             <CityCard
               key={c.id}
@@ -1462,7 +1625,7 @@ function PersonaGuidesView({ onCityClick }: { onCityClick: (id: string) => void 
         )}
 
         {pageCount > 1 && (
-          <Pagination page={safePage} pageCount={pageCount} onChange={setPage} />
+          <Pagination page={safePage} pageCount={pageCount} onChange={goToPage} />
         )}
       </section>
     </motion.div>
@@ -1638,11 +1801,7 @@ function CityCard({ title, tagline, image, rating, onClick }: any) {
       <div className="p-6 w-full">
         <h3 className="text-xl font-black mb-1 text-slate-950 uppercase tracking-tight">{title}</h3>
         <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-4">{tagline}</p>
-        <div className="flex items-center justify-between border-t border-slate-50 pt-4">
-          <div className="flex gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-brand"></div>
-            <div className="w-1.5 h-1.5 rounded-full bg-slate-100"></div>
-          </div>
+        <div className="flex items-center justify-end border-t border-slate-50 pt-4">
           <span className="text-slate-950 font-black text-[10px] flex items-center gap-2 uppercase tracking-widest group-hover:text-brand transition-colors">
             {SITE_TEXT.cityCard.blueprintCta} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </span>
