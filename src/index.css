@@ -56,7 +56,14 @@
      correct angle once the animation finishes. */
   transform: rotate(var(--needle-angle, 0deg));
   animation: gauge-needle-sweep 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  fill: #0f172a;
 }
+
+/* Gauge SVG parts use CSS fill/stroke (which override the inline
+   presentation attributes) so the dark theme can re-colour them. */
+.gauge-track     { stroke: #f1f5f9; }
+.gauge-pivot     { fill: #0f172a; }
+.gauge-pivot-dot { fill: #ffffff; }
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
@@ -96,3 +103,68 @@
 }
 .live-strip::-webkit-scrollbar { display: none; }
 .live-strip > * { scroll-snap-align: start; flex: 0 0 auto; }
+
+/* ============================================================
+   DARK MODE
+   The theme toggle adds `.dark` to <html>. Every rule below is
+   scoped under `.dark`, so light mode is byte-for-byte unchanged
+   (zero regression risk). The app is built with literal Tailwind
+   palette classes rather than semantic tokens, so dark theming
+   is done here by remapping the recurring surface / text /
+   border utilities. These rules are unlayered, so they win over
+   Tailwind's layered utilities via the CSS cascade.
+   ============================================================ */
+.dark { color-scheme: dark; }
+
+/* Smooth the page-background fade on toggle. Cards already carry a
+   Tailwind `transition-*` class so they ease for free; this only
+   covers <body>, which has no transition of its own. */
+body { transition: background-color 0.3s ease, color 0.3s ease; }
+
+/* --- Surfaces --- */
+.dark body,
+.dark .bg-surface-bg          { background-color: #020617; }
+.dark .bg-white               { background-color: #0f172a; }
+.dark .bg-white\/90           { background-color: rgba(15, 23, 42, 0.92); }
+.dark .bg-white\/80           { background-color: rgba(15, 23, 42, 0.85); }
+.dark .bg-slate-50            { background-color: #1e293b; }
+.dark .bg-slate-100           { background-color: #334155; }
+.dark .bg-slate-900           { background-color: #334155; }
+.dark .bg-rose-50             { background-color: rgba(244, 63, 94, 0.14); }
+.dark .bg-rose-100            { background-color: rgba(244, 63, 94, 0.24); }
+.dark .bg-emerald-50\/20      { background-color: rgba(16, 185, 129, 0.08); }
+
+/* --- Text --- */
+.dark .text-slate-950,
+.dark .text-slate-900,
+.dark .text-slate-800         { color: #f1f5f9; }
+.dark .text-slate-700,
+.dark .text-slate-600,
+.dark .text-slate-500         { color: #cbd5e1; }
+.dark .text-slate-400,
+.dark .text-slate-300,
+.dark .text-slate-200         { color: #94a3b8; }
+.dark .text-emerald-600,
+.dark .text-emerald-500       { color: #34d399; }
+.dark .text-emerald-950       { color: #6ee7b7; }
+
+/* --- Borders --- */
+.dark .border-slate-50,
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-100\/50,
+.dark .border-slate-100\/60   { border-color: #1e293b; }
+
+/* Brand-green / accent badge surfaces keep dark text + icons for
+   contrast. Placed AFTER the text overrides above so it wins on
+   equal specificity (source order). */
+.dark .bg-brand,
+.dark .bg-brand *,
+.dark .bg-orange-400,
+.dark .bg-orange-400 *        { color: #0f172a; }
+
+/* --- Gauge SVG (inline fills can't be themed via utilities) --- */
+.dark .gauge-track            { stroke: #334155; }
+.dark .gauge-needle           { fill: #f8fafc; }
+.dark .gauge-pivot            { fill: #f8fafc; }
+.dark .gauge-pivot-dot        { fill: #0f172a; }

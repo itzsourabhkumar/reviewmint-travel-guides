@@ -8,6 +8,22 @@
     <meta name="theme-color" content="#00B894" />
     <title>ReviewMint - Travel Guide</title>
     <script type="text/javascript">
+      // Apply the saved theme BEFORE first paint so dark mode never
+      // flashes light on load. Falls back to the OS colour-scheme
+      // preference when the user has not chosen yet. React keeps the
+      // <html> class in sync afterwards (see App.tsx theme effect).
+      (function () {
+        try {
+          var stored = localStorage.getItem('reviewmint-theme');
+          var prefersDark = window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (stored === 'dark' || (!stored && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) { /* localStorage unavailable — default to light */ }
+      })();
+    </script>
+    <script type="text/javascript">
       // Decode the SPA fallback redirect from public/404.html so deep
       // links (e.g. /city/agra) survive a hard refresh on GitHub Pages.
       (function (l) {
