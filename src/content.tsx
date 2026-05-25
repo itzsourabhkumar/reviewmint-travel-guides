@@ -247,6 +247,13 @@ export const SITE_TEXT = {
     ariaLabel: 'Back to top'
   },
 
+  themeToggle: {
+    toLight:    'Switch to light mode',
+    toDark:     'Switch to dark mode',
+    lightLabel: 'Light Mode',
+    darkLabel:  'Dark Mode'
+  },
+
   filterBar: {
     allLabel:         'All',
     sortLabel:        'Sort By',

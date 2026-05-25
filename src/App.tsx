@@ -26,7 +26,9 @@ import {
   ChevronDown,
   SlidersHorizontal,
   RotateCcw,
-  Menu
+  Menu,
+  Sun,
+  Moon
 } from 'lucide-react';
 import {
   SITE_TEXT,
@@ -110,10 +112,27 @@ export default function App() {
   );
   const [activePersonality, setActivePersonality] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [loginOpen, setLoginOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const heroSearchRef = useRef<HTMLInputElement>(null);
+
+  // --- Theme (light / dark) -------------------------------------------
+  // Initial value mirrors the pre-paint <html> class set by the bootstrap
+  // script in index.html, so React's first render already agrees with the
+  // DOM (no flash, no mismatch).
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+      ? 'dark'
+      : 'light'
+  );
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('dark', theme === 'dark');
+    try { localStorage.setItem('reviewmint-theme', theme); } catch { /* storage blocked */ }
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'));
 
   // Seed the initial history entry so a future popstate has a state to restore to.
   useEffect(() => {
@@ -201,12 +220,9 @@ export default function App() {
             <NavLink active={view.kind === 'destinations'} onClick={() => navigate({ kind: 'destinations' })}>{SITE_TEXT.nav.destinations}</NavLink>
             <NavLink active={view.kind === 'personas'}     onClick={() => navigate({ kind: 'personas' })}>{SITE_TEXT.nav.personaGuides}</NavLink>
             <NavLink active={view.kind === 'about'}        onClick={() => navigate({ kind: 'about' })}>{SITE_TEXT.nav.about}</NavLink>
-            <button
-              onClick={() => setLoginOpen(true)}
-              className="bg-brand/10 text-brand px-6 py-2.5 rounded-xl border border-brand/20 hover:bg-brand hover:text-slate-950 transition-all font-black"
-            >
-              {SITE_TEXT.nav.login}
-            </button>
+            {/* Day/Night theme switch — occupies the slot the Login
+                button used to hold. */}
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
           </div>
           {/* Mobile-only nav controls: search icon (jumps to hero search)
               and a hamburger that opens the off-canvas nav drawer. */}
@@ -366,27 +382,15 @@ export default function App() {
       </footer>
 
       {/* Mobile nav drawer — opens from the right via the hamburger button
-          in the navbar. Mirrors the desktop nav links plus Login. */}
+          in the navbar. Mirrors the desktop nav links + theme toggle. */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <MobileMenu
             view={view}
+            theme={theme}
+            onToggleTheme={toggleTheme}
             onClose={() => setMobileMenuOpen(false)}
             onNavigate={(v) => { setMobileMenuOpen(false); navigate(v); }}
-            onLogin={() => { setMobileMenuOpen(false); setLoginOpen(true); }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Login Modal */}
-      <AnimatePresence>
-        {loginOpen && (
-          <LoginModal
-            onClose={() => setLoginOpen(false)}
-            onSuccess={(email) => {
-              setLoginOpen(false);
-              showToast(SITE_TEXT.toasts.loginWelcome(email.split('@')[0]));
-            }}
           />
         )}
       </AnimatePresence>
@@ -434,6 +438,38 @@ function Logo({ size = 'md' }: { size?: 'sm' | 'md' }) {
         draggable={false}
       />
     </div>
+  );
+}
+
+// Day / Night theme switch. Replaces the old Login button in the header.
+// A pill-style toggle: the knob slides between a sun (light) and a moon
+// (dark) face. Purely presentational — the actual theme state, the
+// <html> `.dark` class and localStorage persistence are owned by <App>.
+function ThemeToggle({ theme, onToggle }: { theme: 'light' | 'dark'; onToggle: () => void }) {
+  const isDark = theme === 'dark';
+  const t = SITE_TEXT.themeToggle;
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isDark}
+      aria-label={isDark ? t.toLight : t.toDark}
+      title={isDark ? t.toLight : t.toDark}
+      onClick={onToggle}
+      className={`relative inline-flex items-center w-[60px] h-[30px] rounded-full border transition-colors shrink-0 ${
+        isDark ? 'bg-slate-800 border-slate-700' : 'bg-brand/20 border-brand/40'
+      }`}
+    >
+      <span
+        className={`absolute top-[3px] w-[22px] h-[22px] rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
+          isDark
+            ? 'translate-x-[32px] bg-slate-950 text-brand'
+            : 'translate-x-[3px] bg-white text-amber-500'
+        }`}
+      >
+        {isDark ? <Moon size={12} strokeWidth={2.5} /> : <Sun size={12} strokeWidth={2.5} />}
+      </span>
+    </button>
   );
 }
 
@@ -495,7 +531,7 @@ function NewsletterForm({ onSubscribed, onInvalid }: { onSubscribed: (email: str
 // Off-canvas mobile navigation drawer. Slides in from the right; backdrop
 // click and the X button both close it. Active link mirrors the desktop
 // navbar's active styling for consistency.
-function MobileMenu({ view, onClose, onNavigate, onLogin }: any) {
+function MobileMenu({ view, theme, onToggleTheme, onClose, onNavigate }: any) {
   const items: { label: string; view: View; isActive: boolean }[] = [
     { label: SITE_TEXT.nav.home,          view: { kind: 'home' },         isActive: view.kind === 'home' },
     { label: SITE_TEXT.nav.destinations,  view: { kind: 'destinations' }, isActive: view.kind === 'destinations' },
@@ -540,83 +576,15 @@ function MobileMenu({ view, onClose, onNavigate, onLogin }: any) {
               {it.label}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={onLogin}
-            className="mt-4 w-full bg-brand text-slate-950 px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-white transition-colors"
-          >
-            {SITE_TEXT.nav.login}
-          </button>
+          {/* Day/Night theme switch — replaces the old Login button. */}
+          <div className="mt-4 flex items-center justify-between px-4 py-3 rounded-xl bg-slate-900">
+            <span className="text-sm font-bold uppercase tracking-widest text-slate-400">
+              {theme === 'dark' ? SITE_TEXT.themeToggle.darkLabel : SITE_TEXT.themeToggle.lightLabel}
+            </span>
+            <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+          </div>
         </nav>
       </motion.div>
-    </motion.div>
-  );
-}
-
-function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (email: string) => void }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !password.trim()) return;
-    onSuccess(email.trim());
-  };
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[70] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <motion.form
-        initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 30, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={submit}
-        className="bg-slate-950 border border-slate-800 rounded-[2rem] p-10 w-full max-w-md shadow-2xl"
-      >
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Logo size="md" />
-            <span className="font-display text-xl font-black text-white tracking-tighter">{SITE_TEXT.loginModal.title}</span>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-slate-500 hover:text-white transition-colors"
-            aria-label="Close login"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500 mb-6">{SITE_TEXT.loginModal.meta}</p>
-        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{SITE_TEXT.loginModal.emailLabel}</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder={SITE_TEXT.loginModal.emailPlaceholder}
-          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand mb-4"
-          autoFocus
-        />
-        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{SITE_TEXT.loginModal.passwordLabel}</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder={SITE_TEXT.loginModal.passwordPlaceholder}
-          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand mb-8"
-        />
-        <button
-          type="submit"
-          className="w-full bg-brand text-slate-950 font-black uppercase tracking-widest text-xs py-4 rounded-xl hover:bg-white transition-colors"
-        >
-          {SITE_TEXT.loginModal.submitButton}
-        </button>
-        <p className="text-[10px] text-slate-500 mt-6 text-center">{SITE_TEXT.loginModal.fineprint}</p>
-      </motion.form>
     </motion.div>
   );
 }
@@ -1354,6 +1322,7 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
               */}
               <svg className="w-full h-auto block gauge-svg" viewBox="0 0 100 56">
                 <path
+                  className="gauge-track"
                   d="M10 50 A40 40 0 0 1 90 50"
                   fill="none" stroke="#F1F5F9" strokeWidth="9" strokeLinecap="round"
                 />
@@ -1383,9 +1352,10 @@ function CityView({ city, activePersonality, setActivePersonality }: { city: Des
                 />
                 {/* Clock-hub pivot cap: solid black with a larger white
                     inner dot (r=2) per new.jpg — gives the meter a more
-                    speedometer-like, mechanical feel. */}
-                <circle cx="50" cy="50" r="5" fill="#0F172A" />
-                <circle cx="50" cy="50" r="2" fill="#FFFFFF" />
+                    speedometer-like, mechanical feel. Classed so the dark
+                    theme can invert the fills (see index.css). */}
+                <circle className="gauge-pivot" cx="50" cy="50" r="5" fill="#0F172A" />
+                <circle className="gauge-pivot-dot" cx="50" cy="50" r="2" fill="#FFFFFF" />
               </svg>
               {/* Slightly lower and slightly smaller numeric score so the
                   pivot has visible breathing room above it. */}
