@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="apple-touch-icon" href="logo.png" />
+    <meta name="theme-color" content="#00B894" />
+    <title>ReviewMint - Travel Guide</title>
+    <script type="text/javascript">
+      // Apply the saved theme BEFORE first paint so dark mode never
+      // flashes light on load. Falls back to the OS colour-scheme
+      // preference when the user has not chosen yet. React keeps the
+      // <html> class in sync afterwards (see App.tsx theme effect).
+      (function () {
+        try {
+          var stored = localStorage.getItem('reviewmint-theme');
+          var prefersDark = window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (stored === 'dark' || (!stored && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) { /* localStorage unavailable — default to light */ }
+      })();
+    </script>
+    <script type="text/javascript">
+      // Decode the SPA fallback redirect from public/404.html so deep
+      // links (e.g. /city/agra) survive a hard refresh on GitHub Pages.
+      (function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search.slice(1).split('&').map(function (s) {
+            return s.replace(/~and~/g, '&');
+          }).join('?');
+          window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
+        }
+      }(window.location));
+    </script>
+    <script type="module" crossorigin src="/assets/index-CPwq8UTb.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-hkf3kotZ.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+
